@@ -1,0 +1,17 @@
+---
+title: "Data Preparation"
+output: html_document
+---
+
+```{r}
+library("dplyr")
+library("magrittr")
+library("ggplot2")
+```
+
+## Data Preparation
+
+```{r}
+load("./data/data_exploration.rda")
+```
+

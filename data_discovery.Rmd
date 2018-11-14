@@ -14,7 +14,7 @@ library("ggplot2")
 We will first get a feel for our churn data set by getting a summary of the dataframe `churn_df`
 
 ```{r}
-churn_df <- read.csv("data/churn_train.csv")
+churn_df <- read.csv("data/churn_train.csv", na.strings = c("", "NA"))
 
 summary(churn_df)
 ```
@@ -77,7 +77,140 @@ churn_df %>%
 ```
 
 
-```{r}
+Let's look at the columns that have __6.0060%__ population of `NA` values and  try to find a pattern in the way `NA` values are distributed.
 
+```{r}
+churn_df %>%
+  select(2, 6:13, 15:17, 18, 19) %>%
+  filter_all(any_vars(is.na(.))) 
+```
+
+We can see that there are many `NA` values present in enitre row which makes it .....
+
+301 rows were `NA` exists blah blah blah....
+
+We then should remove rows that have more than 75%  of it are `NA`
+
+```{r}
+churn_df_1 <- churn_df[rowMeans(is.na(churn_df)) <= 0.25,]
+summary(churn_df_1)
+```
+
+
+Lets look at the percentage of `NA` and how it has changed
+```{r}
+na_df_1 <- na_percentage(churn_df_1) %>%
+  data_frame(Columns = names(.), `NA %` = .) %>%
+  mutate_at(
+    vars(`NA %`),
+    funs(round(. * 100, 2))
+  ) %>%
+  mutate(label = sprintf("%g%%", `NA %`)) %>%
+  arrange(desc(`NA %`))
+
+na_df_1
+```
+Let's look at a visual presentation of how the `NA` values have changed
+
+```{r}
+ggplot(na_df_1, aes(x = "", y = `NA %`, fill = factor(Columns))) +
+  geom_bar(width = 1, stat = "identity", position = "stack") +
+  coord_polar("y", start = 0) +
+  theme_void() +
+  geom_text(aes(
+    x = 1.2,
+    label = label),
+    position = position_stack(vjust = 0.5)
+  ) +
+  labs(fill='Columns')
+```
+
+```{r}
+churn_df_1 %>%
+  select(2, 6:13, 15:17, 18, 19) %>%
+  filter_all(any_vars(is.na(.)))
+```
+
+We have removed about 200 rows where the population of `NA`s were 75% reducing our overall dataset from __3333__ to __3133__.
+
+Now that we have removed rows which had very little information in them, we can focus on figureing out a strategy on filling in the missing values of our remaning rows.
+
+```{r}
+sum(is.na(churn_df_1))
+```
+
+We have __503__ `NA` values in our enitire dataframe meaning that of the columns that have `NA`  each row in the column has at least 1 `NA`.
+
+By looking at the pie charts above we can see that columns `acount_length` has thr most number of `NA`s however we are not convinced that `acount_length` is a significant predictor variable. 
+
+We can build a model which will give us an idea of the variables that are important and that we need to focus on when trying to fill in missing values
+
+```{r}
+churn_model <- glm(churn~., data = churn_df_1, family = "binomial")
+summary(churn_model)
+```
+
+`account_length` had the most number of `NA` however its p-value is high at __0.43339__ which tells us that its not significant when predicting `churn`
+
+```{r}
+na_col_df <- churn_df_1 %>%
+  select(account_length, total_eve_minutes, total_intl_calls, churn) %>%
+  transform(churn = ifelse(churn == "no", 0, 1))
+
+na_col_df
+```
+we have to remove all rows that have NA in `na_col_df` so as to calculate the correlation between account_length, total_eve_minutes, total_intl_calls and `churn`.
+
+currently in `na_col_df` there are __503__ `NA` values
+
+```{r}
+summary(na_col_df)
+```
+
+
+```{r}
+na_col_df <- na_col_df %>% na.omit()
+
+summary(na_col_df)
+```
+
+
+Lets do the pearson correlation between `account_length` and `churn`
+```{r}
+cor(na_col_df)
+```
+
+Lets do the spearman correlation between `account_length` and `churn`
+
+
+```{r}
+cor(na_col_df, method = "spearman")
+```
+
+Since the correlation between `churn` and `account_length` is __ 0.006978986__ using pearson correlation and __0.0003126797__ using spearman correlation. It means `account_length` is essentially no correlation withchurn so as we transition from 0 to 1 (no to yes) in churn, the account_length is essentially invariant.
+
+Therefore `account_length` is not a predictor of `churn` and we should omit it from our model.
+
+
+We keep total_eve_minutes and total_intl_calls beacause they are negatively correlated with churn so customers are less apt to churn .....
+
+```{r}
+churn_df_2 <- churn_df_1 %>% select(-account_length)
+
+summary(churn_df_2)
+```
+
+```{r}
+sum(is.na(churn_df_2))
+```
+
+Now we have __202__ rows we need to worry about and fill in the `NA` values for.
+
+We will now impute missing values in our dataset.
+
+Now we will save the data frome that has been prepared for data imputation.
+
+```{r}
+save(churn_df_2, file = "data/data_exploration.rda")
 ```
 

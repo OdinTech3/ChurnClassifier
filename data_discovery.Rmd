@@ -1,0 +1,77 @@
+---
+title: "Data Discovery"
+output: html_notebook
+---
+
+```{r}
+library("dplyr")
+library("magrittr")
+library("ggplot2")
+```
+
+## Data Discovery
+
+We will first get a feel for our churn data set by getting a summary of the dataframe `churn_df`
+
+```{r}
+churn_df <- read.csv("data/churn_train.csv")
+
+summary(churn_df)
+```
+
+From the summary we can see that that there are a lot of `NA` values in columns execpt for `state`, `aread_code`, `international_plan`, `voice_mail_plan`, `total_night_calls`, and `churn`. 16 out of the 20 columns (variables) have `NA` values. Further analysis of the summary of our dataframe reveals that 10 variables have about __200__ `NA` values while 2 have __301__ and 1 has __501__.
+
+For a better understanding of the presence of `NA` in our dataframe let's look at the percentage of `NA`s accross all the variables in the dataframe.
+
+```{r}
+# Define a function to compute the percentage of NAs accross all columns.
+na_percentage <- function(df, fmt = F) {
+  return (df %>%
+            is.na() %>%
+            colMeans() %>%
+            sapply(function(x) {
+              if (fmt) {
+                return(sprintf("%.5f%%", x * 100))
+              }
+              
+              return (x)
+            })
+          )
+}
+
+na_df <- na_percentage(churn_df) %>%
+  data_frame(Columns = names(.), `NA %` = .) %>%
+  mutate_at(
+    vars(`NA %`),
+    funs(round(. * 100, 2))
+  ) %>%
+  mutate(label = sprintf("%g%%", `NA %`)) %>%
+  arrange(desc(`NA %`))
+
+na_df
+```
+
+
+ 
+```{r}
+ggplot(na_df, aes(x = "", y = `NA %`, fill = factor(Columns))) +
+  geom_bar(width = 1, stat = "identity", position = "stack") +
+  coord_polar("y", start = 0) +
+  theme_void() +
+  geom_text(aes(
+    x = 1.2,
+    label = label),
+    position = position_stack(vjust = 0.5)
+  ) +
+  labs(fill='Columns')
+```
+
+
+```{r, echo = F}
+# This code chunk will not be part of the knitted document.
+
+# Show the index number of each column names
+churn_df %>%
+  colnames() %>%
+  data.frame(index = c(1:length(.)), colname = .)
+```

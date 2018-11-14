@@ -7,11 +7,145 @@ output: html_document
 library("dplyr")
 library("magrittr")
 library("ggplot2")
+library("randomForest")
 ```
 
 ## Data Preparation
 
 ```{r}
 load("./data/data_exploration.rda")
+```
+
+```{r}
+summary(churn_df_2)
+```
+
+## Inputing missing values Impute missing values in predictor data using median / mode
+
+```{r}
+ 
+# The proximity matrix from the randomForest is used to update the imputation of the NAs. For continuous predictors, the imputed value is the weighted average of the non-missing observations, where the weights are the proximities. For categorical predictors, the imputed value is the category with the largest average proximity. This process is iterated iter times.
+
+set.seed(222)
+
+churn_df.imputed <- rfImpute(churn ~ ., data = churn_df_2)
+```
+
+```{r}
+summary(churn_df.imputed)
+``` 
+
+
+```{r}
+
+x_imp_tem <- c(1:max(churn_df.imputed$total_eve_minutes))
+#x_tem <- c(1:max(churn_df_2$total_eve_minutes, na.rm = T))
+
+#par(mfrow = c(2,1))
+
+plot(churn_df.imputed$total_eve_minutes, type = "l")
+plot(na.omit(churn_df_2$total_eve_minutes), type = "l")
+```
+
+```{r}
+tem_df <- data.frame(
+  OG = churn_df_2$total_eve_minutes,
+  Imputed = churn_df.imputed$total_eve_minutes
+)
+
+tem_df %>% filter_all(any_vars(is.na(.)))
+```
+
+## Finding the best predictor variables
+```{r}
+xtabs(~ churn + international_plan, data = churn_df.imputed)
+xtabs(~ churn + voice_mail_plan, data = churn_df.imputed)
+```
+
+```{r}
+#Data Preparation
+#mydata$rank <- factor(mydata$rank)
+# Split data into training (70%) and validation (30%)
+dt = sort(sample(nrow(churn_df.imputed), nrow(churn_df.imputed)*.7))
+train<-churn_df.imputed[dt,]
+val<-churn_df.imputed[-dt,] 
+# Check number of rows in training and validation data sets
+nrow(train)
+nrow(val)
+```
+
+
+```{r}
+#Run Logistic Regression
+model4 <- glm(churn~.,data=churn_df.imputed,family="binomial")
+summary(model4)
+```
+
+```{r}
+#Stepwise Logistic Regression
+mylogit_df = step(model4, direction = c("backward"))
+```
+
+```{r}
+#Run Logistic Regression
+model4 <- glm(churn~.,data=churn_df_2,family="binomial")
+summary(model4)
+summary(model4)$coefficient
+#Stepwise Logistic Regression
+mylogit_df = step(model4)
+#Logistic Regression Coefficient
+summary.coeff0 = summary(mylogit_df)$coefficient
+#Calculating Odd Ratios
+OddRatio = exp(coef(mylogit_df))
+summary.coeff = cbind(Variable = row.names(summary.coeff0), OddRatio, summary.coeff0)
+row.names(summary.coeff) = NULL
+#
+#R Function : Standardized Coefficients
+stdz.coff <- function (regmodel) 
+{ b <- summary(regmodel)$coef[-1,1]
+  sx <- sapply(regmodel$model[-1], sd)
+  beta <-(3^(1/2))/pi * sx * b
+  return(beta)
+}
+
+std.Coeff = data.frame(Standardized.Coeff = stdz.coff(mylogit_df))
+std.Coeff = cbind(Variable = row.names(std.Coeff), std.Coeff)
+row.names(std.Coeff) = NULL
+#
+#Final Summary Report
+final = merge(summary.coeff, std.Coeff, by = "Variable", all.x = TRUE)
+#
+#Prediction
+pred = predict(mylogit_df,val, type = "response")
+finaldata = cbind(val, pred)
+#
+#Storing Model Performance Scores
+library(ROCR)
+pred_val <-prediction(pred ,finaldata$churn)
+#
+# Maximum Accuracy and prob. cutoff against it
+acc.perf <- performance(pred_val, "acc")
+ind = which.max( slot(acc.perf, "y.values")[[1]])
+acc = slot(acc.perf, "y.values")[[1]][ind]
+cutoff = slot(acc.perf, "x.values")[[1]][ind]
+#
+# Print Results
+print(c(accuracy= acc, cutoff = cutoff))
+#
+# Calculating Area under Curve
+perf_val <- performance(pred_val,"auc")
+perf_val
+#
+# Plotting Lift curve
+plot(performance(pred_val, measure="lift", x.measure="rpp"), colorize=TRUE)
+#
+# Plot the ROC curve
+perf_val2 <- performance(pred_val, "tpr", "fpr")
+plot(perf_val2, col = "green", lwd = 1.5)
+#
+#Calculating KS statistics
+ks1.tree <- max(attr(perf_val2, "y.values")[[1]] - (attr(perf_val2, "x.values")[[1]]))
+ks1.tree
+
 ```
 

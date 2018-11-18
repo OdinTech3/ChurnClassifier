@@ -7,11 +7,12 @@ output: html_notebook
 library("dplyr")
 library("magrittr")
 library("ggplot2")
+library("fiftystater")
 ```
 
 ## Data Discovery
 
-We will first get a feel for our churn data set by getting a summary of the dataframe `churn_df`
+We will first get a feel for our data set by getting a summary of the dataframe `churn_df`.
 
 ```{r}
 churn_df <- read.csv("data/churn_train.csv", na.strings = c("", "NA"))
@@ -19,7 +20,96 @@ churn_df <- read.csv("data/churn_train.csv", na.strings = c("", "NA"))
 summary(churn_df)
 ```
 
-From the summary we can see that that there are a lot of `NA` values in columns execpt for `state`, `aread_code`, `international_plan`, `voice_mail_plan`, `total_night_calls`, and `churn`. 16 out of the 20 columns (variables) have `NA` values. Further analysis of the summary of our dataframe reveals that 10 variables have about __200__ `NA` values while 2 have __301__ and 1 has __501__.
+From the summary we can see that a lot of `NA` values are present in many columns execpt for the columns `state`, `aread_code`, `international_plan`, `voice_mail_plan`, `total_night_calls`, and `churn`.
+
+```{r}
+churn_df %>%
+  select_if(is.factor) %>%
+  names()
+```
+
+`state`, `aread_code`, `international_plan`, `voice_mail_plan`, and `churn` are columns that are of type factor.
+
+The `state` columns seems to represent states from the USA (51 states in total). Below is a frequency table showing us the where most of the customers come from.
+
+```{r}
+state_freq <- churn_df %>%
+  select(state) %>%
+  group_by(state) %>%
+  summarise(freq  = n()) %>%
+  arrange(desc(freq))
+
+summary(state_freq)
+```
+
+```{r}
+us_map_data <- merge(
+  fifty_states,
+  data.frame(
+    # Add missing state
+    state = c(state.abb, "DC"),
+    id = tolower(c(state.name, "district of columbia"))
+  ),
+  by = "id",
+  all = T
+)
+
+summary(us_map_data)
+```
+
+```{r}
+state_freq <- merge(state_freq, us_map_data, by = "state") %>%
+  select(id, freq, long, lat, group) %>%
+  distinct()
+```
+
+```{r}
+# Using the state.center list we can find out the exact center of each state
+state_ctrs <- data.frame(
+    state = c(state.abb, "DC"),
+    c_long = c(state.center$x, 38.889931) , 
+    c_lat = c(state.center$y, -77.009003)
+  ) %>% 
+  merge(us_map_data, ., by = "state") %>%
+  select(state, id, c_long, c_lat) %>%
+  distinct()
+
+View(state_ctrs)
+```
+  
+```{r}
+ggplot(us_map_data, aes(x = long, y = lat)) +
+  geom_map(
+    map = us_map_data,
+    color="#ffffff",
+    aes(map_id = id)
+  ) +
+  geom_map(
+    data = state_freq,
+    map = us_map_data,
+     color="#ffffff",
+    aes(fill = freq, map_id = id)
+  ) +
+  scale_fill_continuous(low = 'thistle2', high = 'darkred', guide='colorbar') +
+  geom_text(
+    data = state_ctrs,
+    size = 2,
+    aes(x = c_long, y = c_lat, label = state)
+  ) +
+  coord_cartesian(xlim = c(-130, -65), ylim = c(24, 51)) +
+  theme(
+    axis.ticks = element_blank(),
+    axis.text = element_blank(),
+    panel.background = element_blank(),
+    panel.border = element_blank()
+  ) +
+  labs(x = NULL, y = NULL, title = "Customers per State")
+```
+
+
+16 out of the 20 variables (columns) have `NA` values. Further analysis of the summary of our dataframe reveals that 10 variables have about __200__ `NA` values while 2 have __301__ and 1 has __501__.
+
+Fu
 
 For a better understanding of the presence of `NA` in our dataframe let's look at the percentage of `NA`s accross all the variables in the dataframe.
 
@@ -48,24 +138,23 @@ na_df <- na_percentage(churn_df) %>%
   mutate(label = sprintf("%g%%", `NA %`)) %>%
   arrange(desc(`NA %`))
 
-na_df
+na_df %>% select(-label)
 ```
 
+The table above lists all the variables (columns) and their respective percentage of `NA`s. We can see that most categorical variables such as `state`, `area_code`, `international_plan`, etc. including `total_night_calls` (numerical variable) have no `NA` values in them.
 
- 
+The bar chart below provides a visual representation of the percentage of `NA` in the dataset. We can see that `account_length`, `total_intl_calls` and `total_intl_charge` contribute the most `NA`s with `account_length` being the top contributor.
+
 ```{r}
-ggplot(na_df, aes(x = "", y = `NA %`, fill = factor(Columns))) +
-  geom_bar(width = 1, stat = "identity", position = "stack") +
-  coord_polar("y", start = 0) +
-  theme_void() +
-  geom_text(aes(
-    x = 1.2,
-    label = label),
-    position = position_stack(vjust = 0.5)
-  ) +
-  labs(fill='Columns')
+na_df %>%
+  filter(`NA %`> 0) %>%
+  ggplot(aes(x = Columns, y = `NA %`, fill = Columns)) +
+  geom_bar(stat="identity") +
+  guides(fill = F) +
+  coord_flip() +
+  geom_text(aes(label = label), hjust = 1.6, size = 3.5) +
+  theme_minimal()
 ```
-
 
 ```{r, echo = F}
 # This code chunk will not be part of the knitted document.
@@ -113,16 +202,14 @@ na_df_1
 Let's look at a visual presentation of how the `NA` values have changed
 
 ```{r}
-ggplot(na_df_1, aes(x = "", y = `NA %`, fill = factor(Columns))) +
-  geom_bar(width = 1, stat = "identity", position = "stack") +
-  coord_polar("y", start = 0) +
-  theme_void() +
-  geom_text(aes(
-    x = 1.2,
-    label = label),
-    position = position_stack(vjust = 0.5)
-  ) +
-  labs(fill='Columns')
+na_df_1 %>%
+  filter(`NA %`> 0) %>%
+  ggplot(aes(x = Columns, y = `NA %`, fill = Columns)) +
+  geom_bar(stat="identity") +
+  guides(fill = F) +
+  coord_flip() +
+  geom_text(aes(label = label), hjust = 1.6, size = 3.5) +
+  theme_minimal()
 ```
 
 ```{r}

@@ -30,6 +30,7 @@ ABC Wireless Inc. has hired you to help them with the customers’ churn issue. 
 ## The Team
 
 * Nick (@odintech3)
+* Alan Smith (@adsmith3)
 * Spandana (@spandanasudalagunta)
 * Clifton Rebello (@RebellloC)
 * Kareem Rogers (@kroger27)

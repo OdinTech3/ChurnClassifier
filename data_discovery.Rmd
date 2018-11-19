@@ -278,18 +278,6 @@ sumNa <- churn_df_1 %>%
 
 We have about `r sumNa$value` `NA` values in total in our dataset of which `account_length` owns 9.61% of it while `total_eve_minutes` and `total_intl_class` owns 3.22%.
 
-
-
-```{r}
-na_col_df_acclength <- churn_df_acclength %>%
-  select(account_length, total_eve_minutes, total_intl_calls, churn) %>%
-  transform(churn = ifelse(churn == "no", 0, 1))
-
-na_col_df_acclength
-```
-
-
-
 By looking at the pie charts above we can see that columns `acount_length` has thr most number of `NA`s however we are not convinced that `acount_length` is a significant predictor variable. 
 
 We can build a model which will give us an idea of the variables that are important and that we need to focus on when trying to fill in missing values

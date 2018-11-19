@@ -335,11 +335,3 @@ Now we will save the data frome that has been prepared for data imputation.
 save(churn_df_2, file = "data/data_exploration.rda")
 ```
 
-```{r}
-churn_train_2 <- replace("account_length")= churn_df("account_length")
-```
-
-```{r}
-churn_df
-```
-

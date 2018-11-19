@@ -278,6 +278,11 @@ sumNa <- churn_df_1 %>%
 
 We have about `r sumNa$value` `NA` values in total in our dataset of which `account_length` owns 9.61% of it while `total_eve_minutes` and `total_intl_class` owns 3.22%.
 
+```{r}
+ggplot(churn_df_1, aes(churn, account_length)) +
+  geom_boxplot()
+```
+
 
 
 ```{r}

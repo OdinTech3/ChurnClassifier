@@ -85,10 +85,22 @@ summary(model4)
 #Stepwise Logistic Regression
 mylogit_df = step(model4, direction = c("backward"))
 ```
+##EXPLANATION:
+
+Stepwise regression is a semi-automated process of building a model by successively adding or removing variables based on the t-statistics of their estimated coefficients. The stepwise option lets you either begin with no variables in the model and proceed forward (i.e., adding one variable at a time). The other option is to start with all potential variables in the model and proceed backward (i.e., removing one variable at a time). At each step, the program performs for each variable currently in the model the t-statistic for its estimated coefficient. For each variable not in the model, it computes the t-statistic that its coefficient would have if it were the next variable added, squares it. At the next step, the program automatically enters the variable with the highest statistic (forward), or removes the variable with the lowest statistic (backward). In general, as in this case, if you have a modest-sized set of potential variables from which you wish to eliminate a few (i.e., if you're fine-tuning some prior selection of variables), you should generally go backward.
+
+Stepwise Logistic Regression with R Akaike information criterion (AIC), where AIC = 2k - 2 log L = 2k + Deviance, where k = number of parameters. In general, smaller numbers are better.  Stepwise Logistic Regression penalizes models with many independent or predictor parameters and with models with poor fit.  In general, the lower value of AIC suggests "better" model, but it is a relative measure of model fit. It is used for model selection (i.e. it lets you compare different models estimated on the same dataset. Backwards selection is the default in the Logistic Regression method. Although there may be some evidence in the logistic regression literature that backward selection is less successful than forward selection. This may be due that the full model fit in the first step is the model most likely to result in a complete or quasi-complete separation of response values. However, backward seemed to be successful in this case. As a warning, since the interpretation of coefficients in a model depends on the other terms included, it may seem unwise to let an automatic algorithm determine the questions that we should ask about our data. The decision which variables to include into an analysis should be based on theory. However, there is little theory about these variables, so we need to operate on common business application. 
+
+As evident from the final stage of the stepwise regression, the final model in terms of selection was churn ~ international_plan + voice_mail_plan + total_day_minutes + 
+    total_day_charge + total_eve_charge + total_night_minutes + 
+    total_intl_charge + number_customer_service_calls
+
+In general, the best model is the one with the lowest AIC possible in the logistic regression model with churn as the dependent variable. The final model with the most important variables in predicting churn were, in ascending order: total_day_minutes, total_night_minutes, total_intl_charge, total_eve_charge, voice_mail_,plan,  total_day_charge,  number_customer_service_calls , and international_plan. In other words, international_plan was the best predictor of churn, followed by number_customer_service_calls, etc. In backward, starting out with the full model, the single best predictor was and international_plan.  IThis procedure was used to help in the creation of a best predicted model for churn as the dependent variable. 
+
 
 ```{r}
 #Run Logistic Regression
-model4 <- glm(churn~.,data=churn_df_2,family="binomial")
+model4 <- glm(churn~.,data=churn_df.imputed,family="binomial")
 summary(model4)
 summary(model4)$coefficient
 #Stepwise Logistic Regression
@@ -148,4 +160,113 @@ ks1.tree <- max(attr(perf_val2, "y.values")[[1]] - (attr(perf_val2, "x.values")[
 ks1.tree
 
 ```
+
+```{r}
+mylogit_df3 = step(model4, direction = c("both"))
+```
+#### Standardization of area_code, international_plan, voice_mail_plan for KNN imputation
+```{r}
+area_fn <- function(area_code) {
+  if(area_code == "area_code_408"){ 
+    return(0)
+  } else if (area_code == "area_code_415") {
+    return(1)
+  } else {
+    return(2)
+  }
+}
+
+x <- churn_df_1 %>%
+  transform(
+    churn = ifelse(churn == "no", 0, 1),
+    international_plan = ifelse(international_plan == "no", 0, 1), 
+    voice_mail_plan = ifelse(voice_mail_plan == "no", 0,1),
+    area_code = sapply(area_code, area_fn)
+  )
+x
+```
+## checking for NA values in standardized dataset
+```{r}
+anyNA(x)
+```
+
+##checking for NA values in KNN imputed dataset
+
+```{r}
+knnOutput <- knnImputation(x)    #[, !names(churn_df_1) %in% "churn"])  # perform knn imputation.
+anyNA(knnOutput)
+
+```
+
+### Building a model with KNN imputed dataset
+```{r}
+model5 <- glm(churn ~.,data=knnOutput,family="binomial")
+summary(model5)
+```
+### Stepwise regression using the KNN imputed Model with direction = backward
+```{r}
+mylogit_df2 = step(model5, direction = c("backward"))
+```
+
+### Stepwise regression using the KNN imputed Model with direction = both
+```{r}
+mylogit_df3 = step(model5, direction = c("both"))
+```
+
+## Stepwise regression comparisons between randomforest and KNN imputed datasets
+## Randomforest direction = backward
+Step:  AIC=2062.31
+churn ~ international_plan + voice_mail_plan + total_day_minutes + 
+    total_day_charge + total_eve_charge + total_night_minutes + 
+    total_intl_calls + total_intl_charge + number_customer_service_calls
+
+## Randomforest direction = both
+Step:  AIC=2062.31
+churn ~ international_plan + voice_mail_plan + total_day_minutes + 
+    total_day_charge + total_eve_charge + total_night_minutes + 
+    total_intl_calls + total_intl_charge + number_customer_service_calls
+
+## KNN direction = backward
+Step:  AIC=2057.47
+churn ~ international_plan + voice_mail_plan + total_day_minutes + 
+    total_day_charge + total_eve_minutes + total_night_minutes + 
+    total_intl_calls + total_intl_charge + number_customer_service_calls
+
+## KNN direction = both
+Step:  AIC=2057.47
+churn ~ international_plan + voice_mail_plan + total_day_minutes + 
+    total_day_charge + total_eve_minutes + total_night_minutes + 
+    total_intl_calls + total_intl_charge + number_customer_service_calls
+
+## The common variables in all the four stepwise regressions are :
+international_plan 
+voice_mail_plan 
+total_day_minutes  
+total_day_charge  
+total_night_minutes  
+total_intl_calls 
+total_intl_charge 
+number_customer_service_calls
+TOTAL = 8
+## The additional variables not common in all four stepwise regressions are:
+total_eve_minutes
+total_eve_charge
+TOTAL = 2
+GRAND TOTAL = 10
+## We suggest that these 10 variables be used in the next stage which is the model building process.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 

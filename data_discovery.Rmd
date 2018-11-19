@@ -242,17 +242,12 @@ sum(is.na(churn_df_1))
 ```
 
 ```{r}
-
-churn_df_acclength <- lapply(churn_df_1[,2], abs)
-churn_df_acclength
-```
-
-```{r}
-
-index <- na_col_df$account_length < 0
-na_col_df$account_length[index] = -abs(na_col_df$account_length[index])
+churn_df_1 <- churn_df_1 %>% 
+  mutate_at(.vars = vars(account_length, number_vmail_messages), .funs = funs(abs))
 
 ```
+
+
 
 ```{r}
 na_col_df_acclength <- churn_df_acclength %>%

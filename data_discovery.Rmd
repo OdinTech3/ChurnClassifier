@@ -226,6 +226,40 @@ Now that we have removed rows which had very little information in them, we can 
 sum(is.na(churn_df_1))
 ```
 
+
+
+```{r}
+
+churn_df_acclength <- lapply(churn_df_1[,2], abs)
+churn_df_acclength
+```
+
+```{r}
+
+index <- na_col_df$account_length < 0
+na_col_df$account_length[index] = -abs(na_col_df$account_length[index])
+
+```
+
+```{r}
+na_col_df_acclength <- churn_df_acclength %>%
+  select(account_length, total_eve_minutes, total_intl_calls, churn) %>%
+  transform(churn = ifelse(churn == "no", 0, 1))
+
+na_col_df_acclength
+```
+
+//changing all neg values into pos values
+
+```{r}
+na_col_df_acclength <- churn_df_acclength %>% na.omit()
+
+summary(na_col_df_acclength)
+
+```
+
+
+
 We have __503__ `NA` values in our enitire dataframe meaning that of the columns that have `NA`  each row in the column has at least 1 `NA`.
 
 By looking at the pie charts above we can see that columns `acount_length` has thr most number of `NA`s however we are not convinced that `acount_length` is a significant predictor variable. 
@@ -299,5 +333,13 @@ Now we will save the data frome that has been prepared for data imputation.
 
 ```{r}
 save(churn_df_2, file = "data/data_exploration.rda")
+```
+
+```{r}
+churn_train_2 <- replace("account_length")= churn_df("account_length")
+```
+
+```{r}
+churn_df
 ```
 

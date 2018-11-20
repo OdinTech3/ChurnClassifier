@@ -7,6 +7,7 @@ output: html_document
 library(ROCR)
 ```
 
+
 ```{r}
 # Split data into training (70%) and validation (30%)
 
@@ -54,6 +55,10 @@ test_df_knn <- cdf_knn.imputed[-train_index1,]
 modelKNN <- glm(churn~international_plan+voice_mail_plan+total_day_charge+total_day_minutes+total_intl_calls+number_customer_service_calls+total_eve_minutes+total_eve_charge+total_night_minutes+total_intl_charge+state,data=train_df_knn,family="binomial")
 
 summary(modelKNN)
+```
+
+```{r}
+mylogit_df = step(modelRF)
 ```
 
 ```{r}
@@ -106,6 +111,8 @@ perf_val
 # Plotting Lift curve
 plot(performance(pred_val, measure="lift", x.measure="rpp"), colorize=TRUE)
 #
+#Lift is a measure of effectiveness of a predicted model calculated as the ratio between the results obtained with and without the predictive model.
+#Cummulative gains and lift charts are visual aids for measuring model performance.
 # Plot the ROC curve
 perf_val2 <- performance(pred_val, "tpr", "fpr")
 plot(perf_val2, col = "blue", lwd = 1.5)
@@ -173,3 +180,76 @@ plot(perf_val2, col = "red", lwd = 1.5)
 ks1.tree1 <- max(attr(perf_val2, "y.values")[[1]] - (attr(perf_val2, "x.values")[[1]]))
 ks1.tree1
 ```
+```{r}
+library("pROC")
+```
+
+```{r}
+pred_churn_rf <- predict(modelRF, newdata = test_df_rf, type = "response")
+roc_out_rf <- roc(test_df_rf$churn, pred_churn_rf)
+roc_out_rf
+```
+
+```{r}
+plot(roc_out, col = "red", lwd = 3)
+```
+
+```{r}
+pred_churn_knn <- predict(modelKNN, newdata = test_df_knn, type = "response")
+roc_out_knn <- roc(test_df_knn$churn, pred_churn_knn)
+roc_out_knn
+```
+
+```{r}
+plot(roc_out_knn, col = "red", lwd = 3)
+```
+
+```{r}
+modelRF1 <- glm(
+  churn~international_plan+
+    voice_mail_plan+
+    total_day_charge+total_eve_charge+total_intl_calls+number_customer_service_calls+total_night_minutes+total_intl_charge+state,
+  data=train_df_rf,
+  family="binomial")
+
+summary(modelRF1)
+```
+
+
+```{r}
+pred_churn_rf1 <- predict(modelRF1, newdata = test_df_rf, type = "response")
+roc_out_rf1 <- roc(test_df_rf$churn, pred_churn_rf1)
+roc_out_rf1
+```
+
+
+
+
+
+
+
+
+```{r}
+we_predicted <- as.factor(pred_churn_rf > 0.25)
+head(we_predicted)
+```
+
+```{r}
+levels(we_predicted)  <- list(no = "FALSE", yes = "TRUE")
+table(we_predicted, True = test_df_rf$churn)
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

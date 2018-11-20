@@ -1,5 +1,5 @@
 ---
-title: "Data Discovery"
+title: "Data Exploration"
 output: html_notebook
 ---
 

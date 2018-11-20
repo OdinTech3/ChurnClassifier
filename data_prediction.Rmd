@@ -1,0 +1,10 @@
+---
+title: "Data_prediction"
+output: html_document
+---
+
+```{r}
+pred_churn <- predict(modelRF, newdata = Customers_To_Predict, type = "response")
+hist(pred_churn, 100)
+head(Customers_To_Predict)
+```

@@ -71,14 +71,14 @@ state_freq <- merge(state_freq, us_map_data, by = "state") %>%
 # Using the state.center list we can find out the exact center of each state
 state_ctrs <- data.frame(
     state = c(state.abb, "DC"),
-    c_long = c(state.center$x, 38.889931) , 
+    c_long = c(state.center$x, 38.889931) ,
     c_lat = c(state.center$y, -77.009003)
-  ) %>% 
+  ) %>%
   merge(us_map_data, ., by = "state") %>%
   select(state, id, c_long, c_lat) %>%
   distinct()
 ```
-  
+
 ```{r}
 ggplot(us_map_data, aes(x = long, y = lat)) +
   geom_map(
@@ -138,7 +138,7 @@ na_percentage <- function(df, fmt = F) {
               if (fmt) {
                 return(sprintf("%.5f%%", x * 100))
               }
-              
+
               return (x)
             })
           )
@@ -179,7 +179,7 @@ Below is a table that shows only the variables that have `NA` in them. The code 
 ```{r}
 na_df <- churn_df %>%
   select(-state, -area_code, -international_plan, -voice_mail_plan, -total_night_calls, -churn) %>%
-  filter_all(any_vars(is.na(.))) 
+  filter_all(any_vars(is.na(.)))
 
 na_df
 ```
@@ -207,7 +207,7 @@ We can see that there are many `NA` values present in this the `r nrow(na_df)` r
 In order to deal with those variables that have negative values in them, the simple strategy is to turn all the numbers for each variable in question to positive using the `abs` function.
 
 ```{r}
-churn_df <- churn_df %>% 
+churn_df <- churn_df %>%
   mutate_at(.vars = vars(account_length, number_vmail_messages), .funs = funs(abs))
 
 summary(churn_df)
@@ -219,7 +219,7 @@ From the summary table, we can see that all our variables are positive. `account
 
 Rows in which we have discovered that are completely filled up with `NA` values pose a problem for us. The problem is that they don't have enough data in them which we can use for predicting churn. Each row represents a customer and if a row has 14 elements (representing the 14 columns) consisting of `NA` then that customer is essentially incosiquential in the training of our model.
 
-Imputing of missing values is an approach to solving this problem but in this particular case it would be pointless to do so for rows which have so much of its predictive power missing. There are some rows in which we can impute missing values in, these rows can be salvaged because the percentage of `NA`s in them is not 100%. 
+Imputing of missing values is an approach to solving this problem but in this particular case it would be pointless to do so for rows which have so much of its predictive power missing. There are some rows in which we can impute missing values in, these rows can be salvaged because the percentage of `NA`s in them is not 100%.
 
 The best course of action is to remove rows that have more than __75%__ of its elements that are `NA`. __75%__ is an arbitrary threshold that has been chosen based on the consesus of the group which we believe will keep rows that are salvageable and remove the rows that are unimportant.
 
@@ -273,32 +273,17 @@ Now that we have removed rows which had very little information in them, we can 
 ```{r echo = F}
 sumNa <- churn_df_1 %>%
   select(everything()) %>%
-  summarise(value = sum(is.na(.))) 
+  summarise(value = sum(is.na(.)))
 ```
 
 We have about `r sumNa$value` `NA` values in total in our dataset of which `account_length` owns 9.61% of it while `total_eve_minutes` and `total_intl_class` owns 3.22%.
 
-<<<<<<< HEAD:data_discovery.Rmd
 ```{r}
 ggplot(churn_df_1, aes(churn, account_length)) +
   geom_boxplot()
 ```
 
-
-
-```{r}
-na_col_df_acclength <- churn_df_acclength %>%
-  select(account_length, total_eve_minutes, total_intl_calls, churn) %>%
-  transform(churn = ifelse(churn == "no", 0, 1))
-
-na_col_df_acclength
-```
-
-
-
-=======
->>>>>>> 3a2837c007c28c064cda9a6cc0451f1a0fdfd1ec:data_exploration.Rmd
-By looking at the pie charts above we can see that columns `acount_length` has thr most number of `NA`s however we are not convinced that `acount_length` is a significant predictor variable. 
+By looking at the pie charts above we can see that columns `acount_length` has thr most number of `NA`s however we are not convinced that `acount_length` is a significant predictor variable.
 
 We can build a model which will give us an idea of the variables that are important and that we need to focus on when trying to fill in missing values
 

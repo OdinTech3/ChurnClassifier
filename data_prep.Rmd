@@ -90,8 +90,30 @@ Stepwise Logistic Regression with R Akaike information criterion (AIC), where AI
 
 ### 2.1 Stepwise Regression using kNN Imputed Data
 
+```{r}
+churn_model_knn <- glm(churn~.,data=cdf_knn.imputed,family="binomial")
+summary(churn_model_knn)
 
-### 2.2 Stepwise Regression using Rainforerst Imputed Data
+```
+
+```{r}
+churn_stepwise_knn = step(churn_model_knn, direction = c("backward"))
+
+```
+
+
+
+### 2.2 Stepwise Regression using Randomforest Imputed Data
+
+```{r}
+churn_model_rf <- glm(churn~.,data=cdf_rf.imputed,family="binomial")
+summary(churn_model_rf)
+```
+
+```{r}
+churn_stepwise_rf = step(churn_model_rf, direction = c("backward"))
+```
+
 
 ## Finding the best predictor variables
 

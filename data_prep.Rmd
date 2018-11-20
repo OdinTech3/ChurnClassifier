@@ -23,13 +23,14 @@ summary(churn_df_2)
 
 ## 1. Data Imputation
 
-### 1.1 Data Imputation using Rainforest
+### 1.1 Data Imputation using Randomforest
 
-The proximity matrix from the randomForest is used to update the imputation of the NAs. For continuous predictors, the imputed value is the weighted average of the non-missing observations, where the weights are the proximities. For categorical predictors, the imputed value is the category with the largest average proximity. This process is iterated n times.
+For the RandomForest, the proximity matrix is used to update the imputation of the NA's. For continuous predictors, the imputed value is the weighted average of the non-missing observations, where the weights are the proximities. For categorical predictors, the imputed value is the category with the largest average proximity. This process is iterated n times. The below chunk shows the data frame (cdf_rf) after imputing the missing values using the Randomforest method.
 
 ```{r results = 'hide'}
 cdf_rf.imputed <- rfImpute(churn ~ ., data = churn_df_2)
 ```
+
 
 ```{r}
 summary(cdf_rf.imputed)
@@ -37,13 +38,17 @@ summary(cdf_rf.imputed)
 
 ### 1.2 Data Imputation using kNN
 
+In the below code, we are endeavoring to impute values using the kNN imputation method. 
+
 ```{r}
 cdf_knn.imputed <- knnImputation(churn_df_2)
 
 summary(cdf_knn.imputed)
 ```
 
-### 1.3 kNN vs Rainforest for Data Imputation
+### 1.3 kNN vs Randomforest for Data Imputation
+
+We are now ready to compare the imputed values obtained using the kNN & RandomForest methods.As seen from the output, approximately 95% percent of the imputed values from either methods, are seen to be identical, hence it can be deduced that imputing missing values is immaterial of the type of imputing method used.
 
 ```{r}
 rf_knn_df <- data.frame(
@@ -56,6 +61,8 @@ rf_knn_df <- data.frame(
 rf_knn_df
 ```
 
+ggplot is a data visualization package useful for creating complex but elegant plots. The below plots show a visual for the variables total_intl_calls and total_eve_minutes with the imputed values through both the kNN and RandomForest methods.  
+
 ```{r}
 ggplot(rf_knn_df) +
   geom_point(aes(
@@ -64,9 +71,9 @@ ggplot(rf_knn_df) +
   ) +
   geom_point(aes(
     x = seq_along(rf_total_intl_calls),
-    y = rf_total_intl_calls, colour = "Rainforest")
+    y = rf_total_intl_calls, colour = "RandomForest")
   ) +
-  labs(x = "Index", y = "total_intl_calls", title = "kNN vs Rainforest for total_intl_calls")
+  labs(x = "Index", y = "total_intl_calls", title = "kNN vs RandomForest for total_intl_calls")
 ```
 
 ```{r}
@@ -77,9 +84,9 @@ ggplot(rf_knn_df) +
   ) +
   geom_point(aes(
     x = seq_along(rf_total_eve_minutes),
-    y = rf_total_eve_minutes, colour = "Rainforest")
+    y = rf_total_eve_minutes, colour = "RandomForest")
   ) +
-  labs(x = "Index", y = "total_eve_minutes", title = "kNN vs Rainforest for total_eve_minutes")
+  labs(x = "Index", y = "total_eve_minutes", title = "kNN vs RandomForest for total_eve_minutes")
 ```
 
 ## 2. Stepwise Regression

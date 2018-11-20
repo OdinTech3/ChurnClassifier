@@ -118,7 +118,7 @@ churn_df %>%
   summary()
 ```
 
-`account_length` has values ranging from -209 and 243. The variable `account_length` is not immediatley obvious what it represents but in the domain of this data set, `account_length` represents how long a customer has had an account in terms of days. With that being said `account_length` should not contain any negative values.
+`account_length` has values ranging from -209 and 243. The variable `account_length` is not immediatley obvious what it represents but in the domain of this data set, `account_length` represents how long a customer has had an account in terms of months (we are assuming `account_length` is in months). With that being said `account_length` should not contain any negative values.
 
 `number_vmail_messages` has values ranging from -10 to 51, this variable represents the number of voice mail messages a customer has had, clearly such a variable should not have negative values in them.
 

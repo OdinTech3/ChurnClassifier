@@ -61,7 +61,9 @@ rf_knn_df <- data.frame(
 rf_knn_df
 ```
 
-ggplot is a data visualization package useful for creating complex but elegant plots. The below plots show a visual for the variables total_intl_calls and total_eve_minutes with the imputed values through both the kNN and RandomForest methods.  
+ggplot is a data visualization package useful for creating complex but elegant plots. The below plots show a visual for the variables total_intl_calls and total_eve_minutes with the imputed values through both the kNN and RandomForest methods.
+For total_intl_calls, as the value of x increases, the kNN values are spread across a thin range between 3 & 7 on the y-axis, 
+
 
 ```{r}
 ggplot(rf_knn_df) +

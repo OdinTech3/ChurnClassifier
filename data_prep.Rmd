@@ -117,6 +117,74 @@ churn_stepwise_rf = step(churn_model_rf, direction = c("backward"))
 
 ## Finding the best predictor variables
 
+## Random forest significant attributes
+international_planyes          2.1972515  0.1589164  13.826  < 2e-16 ***
+voice_mail_planyes            -1.0275099  0.3676354  -2.795 0.005191 ** 
+total_day_charge               0.0805890  0.0080508  10.010  < 2e-16 ***
+total_eve_charge               0.0830480  0.0249265   3.332 0.000863 ***
+total_intl_calls              -0.0837351  0.0267472  -3.131 0.001744 ** 
+number_customer_service_calls  0.5395426  0.0420437  12.833  < 2e-16 ***
+states (12) 
+stateCA                        1.9772622  0.7938041   2.491 0.012743 *  
+stateME                        1.2932594  0.7391097   1.750 0.080161 .  
+stateMI                        1.4919750  0.7224169   2.065 0.038899 *  
+stateMN                        1.2142000  0.7194116   1.688 0.091456 .  
+stateMS                        1.2761173  0.7383695   1.728 0.083936 .  
+stateMT                        1.7768485  0.7233884   2.456 0.014038 *  
+stateNJ                        1.5639891  0.7174847   2.180 0.029271 *  
+stateNV                        1.3044053  0.7301848   1.786 0.074034 .  
+stateSC                        1.7432299  0.7519276   2.318 0.020430 *  
+stateTX                        1.6774593  0.7127652   2.353 0.018600 *  
+stateUT                        1.2332761  0.7465346   1.652 0.098534 .  
+stateWA                        1.5031936  0.7340795   2.048 0.040587 *  
+Only Random forest had an additional state MN as compared to KNN
+## KNN significant attributes
+international_plan             2.205e+00  1.594e-01  13.835  < 2e-16 ***
+voice_mail_plan               -1.252e+00  4.395e-01  -2.849  0.00438 ** 
+total_day_minutes             -5.762e-03  2.240e-03  -2.572  0.01010 *  
+total_day_charge               1.074e-01  1.375e-02   7.813 5.58e-15 ***
+total_eve_minutes              1.106e-02  4.403e-03   2.511  0.01204 *  
+total_intl_calls              -8.585e-02  2.679e-02  -3.205  0.00135 ** 
+number_customer_service_calls  5.432e-01  4.221e-02  12.868  < 2e-16 ***
+states(11)
+stateCA                        1.956e+00  7.908e-01   2.473  0.01339 *  
+stateME                        1.256e+00  7.389e-01   1.700  0.08904 .  
+stateMI                        1.465e+00  7.217e-01   2.030  0.04234 *  
+stateMS                        1.253e+00  7.375e-01   1.699  0.08926 .  
+stateMT                        1.754e+00  7.235e-01   2.424  0.01535 *  
+stateNJ                        1.539e+00  7.166e-01   2.148  0.03173 *  
+stateNV                        1.217e+00  7.316e-01   1.663  0.09632 .  
+stateSC                        1.735e+00  7.498e-01   2.314  0.02064 *  
+stateTX                        1.674e+00  7.108e-01   2.355  0.01852 *  
+stateUT                        1.229e+00  7.463e-01   1.646  0.09968 .  
+stateWA                        1.471e+00  7.321e-01   2.009  0.04455 *  
+
+## We recommend the following variables for the initial model building(* denotes stepwise regression results)
+international_planyes          
+voice_mail_planyes            
+total_day_charge               
+total_eve_charge                                                  
+total_intl_calls              
+number_customer_service_calls 
+total_day_minutes 
+total_eve_minutes
+total_night_minutes*
+total_intl_charge*
+
+## We recommend the following states for the initial model building
+stateCA                        
+stateME                          
+stateMI                        
+stateMN                          
+stateMS                          
+stateMT                        
+stateNJ                        
+stateNV                        
+stateSC                        
+stateTX                        
+stateUT                          
+stateWA
+
 ```{r}
 #xtabs(~ international_plan + churn, data = cdf_rf.imputed)
 #xtabs(~ state + churn, data = cdf_rf.imputed) %>% t()

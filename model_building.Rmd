@@ -1,0 +1,134 @@
+---
+title: "Model building"
+output: html_document
+---
+
+```{r}
+library(ROCR)
+```
+
+
+```{r}
+modelRF <- glm(churn~international_plan+voice_mail_plan+total_day_charge+total_eve_charge+total_intl_calls+number_customer_service_calls+state,data=churn_df.imputed,family="binomial")
+summary(modelRF)
+```
+
+```{r}
+modelKNN <- glm(churn~international_plan+voice_mail_plan+total_day_charge+total_day_minutes+total_intl_calls+number_customer_service_calls+total_eve_minutes+state,data=churn_df.imputed,family="binomial")
+summary(modelKNN)
+```
+
+```{r}
+#Stepwise Logistic Regression
+mylogit_df = step(modelRF)
+#Logistic Regression Coefficient
+summary.coeff0 = summary(mylogit_df)$coefficient
+#Calculating Odd Ratios
+OddRatio = exp(coef(mylogit_df))
+summary.coeff = cbind(Variable = row.names(summary.coeff0), OddRatio, summary.coeff0)
+row.names(summary.coeff) = NULL
+#
+#R Function : Standardized Coefficients
+stdz.coff <- function (regmodel)
+{ b <- summary(regmodel)$coef[-1,1]
+  sx <- sapply(regmodel$model[-1], sd)
+  beta <-(3^(1/2))/pi * sx * b
+  return(beta)
+}
+
+std.Coeff = data.frame(Standardized.Coeff = stdz.coff(mylogit_df))
+std.Coeff = cbind(Variable = row.names(std.Coeff), std.Coeff)
+row.names(std.Coeff) = NULL
+#
+#Final Summary Report
+final = merge(summary.coeff, std.Coeff, by = "Variable", all.x = TRUE)
+#
+#Prediction
+pred = predict(mylogit_df,val, type = "response")
+finaldata = cbind(val, pred)
+#
+#Storing Model Performance Scores
+pred_val <-prediction(pred ,finaldata$churn)
+#
+# Maximum Accuracy and prob. cutoff against it
+acc.perf <- performance(pred_val, "acc")
+ind = which.max( slot(acc.perf, "y.values")[[1]])
+acc = slot(acc.perf, "y.values")[[1]][ind]
+cutoff = slot(acc.perf, "x.values")[[1]][ind]
+#
+# Print Results
+print(c(accuracy= acc, cutoff = cutoff))
+#
+# Calculating Area under Curve
+perf_val <- performance(pred_val,"auc")
+perf_val
+#
+# Plotting Lift curve
+plot(performance(pred_val, measure="lift", x.measure="rpp"), colorize=TRUE)
+#
+# Plot the ROC curve
+perf_val2 <- performance(pred_val, "tpr", "fpr")
+plot(perf_val2, col = "blue", lwd = 1.5)
+#
+#Calculating KS statistics
+ks1.tree <- max(attr(perf_val2, "y.values")[[1]] - (attr(perf_val2, "x.values")[[1]]))
+ks1.tree
+```
+
+```{r}
+#Stepwise Logistic Regression
+mylogit_df = step(modelKNN)
+#Logistic Regression Coefficient
+summary.coeff0 = summary(mylogit_df)$coefficient
+#Calculating Odd Ratios
+OddRatio = exp(coef(mylogit_df))
+summary.coeff = cbind(Variable = row.names(summary.coeff0), OddRatio, summary.coeff0)
+row.names(summary.coeff) = NULL
+#
+#R Function : Standardized Coefficients
+stdz.coff <- function (regmodel)
+{ b <- summary(regmodel)$coef[-1,1]
+  sx <- sapply(regmodel$model[-1], sd)
+  beta <-(3^(1/2))/pi * sx * b
+  return(beta)
+}
+
+std.Coeff = data.frame(Standardized.Coeff = stdz.coff(mylogit_df))
+std.Coeff = cbind(Variable = row.names(std.Coeff), std.Coeff)
+row.names(std.Coeff) = NULL
+#
+#Final Summary Report
+final = merge(summary.coeff, std.Coeff, by = "Variable", all.x = TRUE)
+#
+#Prediction
+pred = predict(mylogit_df,val, type = "response")
+finaldata = cbind(val, pred)
+#
+#Storing Model Performance Scores
+pred_val <-prediction(pred ,finaldata$churn)
+#
+# Maximum Accuracy and prob. cutoff against it
+acc.perf <- performance(pred_val, "acc")
+ind = which.max( slot(acc.perf, "y.values")[[1]])
+acc = slot(acc.perf, "y.values")[[1]][ind]
+cutoff = slot(acc.perf, "x.values")[[1]][ind]
+#
+# Print Results
+print(c(accuracy= acc, cutoff = cutoff))
+#
+# Calculating Area under Curve
+perf_val <- performance(pred_val,"auc")
+perf_val
+#
+# Plotting Lift curve
+plot(performance(pred_val, measure="lift", x.measure="rpp"), colorize=TRUE)
+#
+# Plot the ROC curve
+perf_val2 <- performance(pred_val, "tpr", "fpr")
+plot(perf_val2, col = "red", lwd = 1.5)
+#
+#Calculating KS statistics
+ks1.tree <- max(attr(perf_val2, "y.values")[[1]] - (attr(perf_val2, "x.values")[[1]]))
+ks1.tree
+```
+

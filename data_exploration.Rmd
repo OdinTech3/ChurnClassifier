@@ -200,9 +200,9 @@ na_df_stats <- na_df %>%
 
 We can see that there are many `NA` values present in this the `r nrow(na_df)` row subset of our data set. There are `r na_df_stats$freq[1]` rows that have at least __1__ `NA` in one of their columns while `r na_df_stats$freq[2]` rows have all its elements consisting of completely `NA` values.
 
-## 3. Preliminary Data Cleaning
+## 4. Preliminary Data Cleaning
 
-### 3.1 Turning Negatives into Positives
+### 4.1 Turning Negatives into Positives
 
 In order to deal with those variables that have negative values in them, the simple strategy is to turn all the numbers for each variable in question to positive using the `abs` function.
 
@@ -215,7 +215,7 @@ summary(churn_df)
 
 From the summary table, we can see that all our variables are positive. `account_length` ranges from 1 to 243 and `number_vmail_messages` ranges from 0 to 51.
 
-### 3.2 No More NAs
+### 4.2 No More NAs
 
 Rows in which we have discovered that are completely filled up with `NA` values pose a problem for us. The problem is that they don't have enough data in them which we can use for predicting churn. Each row represents a customer and if a row has 14 elements (representing the 14 columns) consisting of `NA` then that customer is essentially incosiquential in the training of our model.
 
@@ -268,7 +268,7 @@ The number of rows initially was 703 and now its 503, we have removed the __200_
 
 Now that we have removed rows which had very little information in them, we can focus on figuring out a strategy on filling in the missing values of our remaining 503 rows.
 
-### 3.3 The Remaining NAs
+### 4.3 The Remaining NAs
 
 ```{r echo = F}
 sumNa <- churn_df_1 %>%

@@ -9,12 +9,12 @@ library(ROCR)
 
 
 ```{r}
-modelRF <- glm(churn~international_plan+voice_mail_plan+total_day_charge+total_eve_charge+total_intl_calls+number_customer_service_calls+total_day_minutes+total_eve_minutes+total_night_minutes+total_intl_charge+state,data=churn_df.imputed,family="binomial")
+modelRF <- glm(churn~international_plan+voice_mail_plan+total_day_charge+total_eve_charge+total_intl_calls+number_customer_service_calls+total_day_minutes+total_eve_minutes+total_night_minutes+total_intl_charge+state,data=cdf_rf.imputed,family="binomial")
 summary(modelRF)
 ```
 
 ```{r}
-modelKNN <- glm(churn~international_plan+voice_mail_plan+total_day_charge+total_day_minutes+total_intl_calls+number_customer_service_calls+total_eve_minutes+total_eve_charge+total_night_minutes+total_intl_charge+state,data=churn_df.imputed,family="binomial")
+modelKNN <- glm(churn~international_plan+voice_mail_plan+total_day_charge+total_day_minutes+total_intl_calls+number_customer_service_calls+total_eve_minutes+total_eve_charge+total_night_minutes+total_intl_charge+state,data=cdf_knn.imputed,family="binomial")
 summary(modelKNN)
 ```
 
@@ -77,11 +77,11 @@ ks1.tree
 
 ```{r}
 #Stepwise Logistic Regression
-mylogit_df = step(modelKNN)
+mylogit_df1 = step(modelKNN)
 #Logistic Regression Coefficient
-summary.coeff0 = summary(mylogit_df)$coefficient
+summary.coeff0 = summary(mylogit_df1)$coefficient
 #Calculating Odd Ratios
-OddRatio = exp(coef(mylogit_df))
+OddRatio = exp(coef(mylogit_df1))
 summary.coeff = cbind(Variable = row.names(summary.coeff0), OddRatio, summary.coeff0)
 row.names(summary.coeff) = NULL
 #
@@ -93,7 +93,7 @@ stdz.coff <- function (regmodel)
   return(beta)
 }
 
-std.Coeff = data.frame(Standardized.Coeff = stdz.coff(mylogit_df))
+std.Coeff = data.frame(Standardized.Coeff = stdz.coff(mylogit_df1))
 std.Coeff = cbind(Variable = row.names(std.Coeff), std.Coeff)
 row.names(std.Coeff) = NULL
 #
@@ -101,7 +101,7 @@ row.names(std.Coeff) = NULL
 final = merge(summary.coeff, std.Coeff, by = "Variable", all.x = TRUE)
 #
 #Prediction
-pred = predict(mylogit_df,val, type = "response")
+pred1 = predict(mylogit_df1,val, type = "response")
 finaldata = cbind(val, pred)
 #
 #Storing Model Performance Scores

@@ -7,14 +7,52 @@ output: html_document
 library(ROCR)
 ```
 
-
 ```{r}
-modelRF <- glm(churn~international_plan+voice_mail_plan+total_day_charge+total_eve_charge+total_intl_calls+number_customer_service_calls+total_day_minutes+total_eve_minutes+total_night_minutes+total_intl_charge+state,data=cdf_rf.imputed,family="binomial")
+# Split data into training (70%) and validation (30%)
+
+# Creates a value for dividing the data into train and test. In this case the value is defined as 75% of the number of rows in the dataset
+smp_size = cdf_rf.imputed %>%
+  nrow() %>%
+  multiply_by(0.70) %>%
+  floor()  
+
+# Randomly identifies the rows equal to sample size from all the rows of cdf_rf.imputed dataset and stores the row number in train_ind
+train_index <- cdf_rf.imputed %>%
+  nrow() %>%
+  sample(x = seq_len(.), size = smp_size)
+
+train_df_rf <- cdf_rf.imputed[train_index,]
+test_df_rf <- cdf_rf.imputed[-train_index,]
+
+modelRF <- glm(
+  churn~international_plan+
+    voice_mail_plan+
+    total_day_charge+total_eve_charge+total_intl_calls+number_customer_service_calls+total_day_minutes+total_eve_minutes+total_night_minutes+total_intl_charge+state,
+  data=train_df_rf,
+  family="binomial")
+
 summary(modelRF)
 ```
 
 ```{r}
-modelKNN <- glm(churn~international_plan+voice_mail_plan+total_day_charge+total_day_minutes+total_intl_calls+number_customer_service_calls+total_eve_minutes+total_eve_charge+total_night_minutes+total_intl_charge+state,data=cdf_knn.imputed,family="binomial")
+# Split data into training (70%) and validation (30%)
+
+# Creates a value for dividing the data into train and test. In this case the value is defined as 75% of the number of rows in the dataset
+smp_size1 = cdf_knn.imputed %>%
+  nrow() %>%
+  multiply_by(0.70) %>%
+  floor()  
+
+# Randomly identifies the rows equal to sample size from all the rows of cdf_rf.imputed dataset and stores the row number in train_ind
+train_index1 <- cdf_knn.imputed %>%
+  nrow() %>%
+  sample(x = seq_len(.), size = smp_size1)
+
+train_df_knn <- cdf_knn.imputed[train_index1,]
+test_df_knn <- cdf_knn.imputed[-train_index1,]
+
+modelKNN <- glm(churn~international_plan+voice_mail_plan+total_day_charge+total_day_minutes+total_intl_calls+number_customer_service_calls+total_eve_minutes+total_eve_charge+total_night_minutes+total_intl_charge+state,data=train_df_knn,family="binomial")
+
 summary(modelKNN)
 ```
 
@@ -23,6 +61,7 @@ summary(modelKNN)
 mylogit_df = step(modelRF)
 #Logistic Regression Coefficient
 summary.coeff0 = summary(mylogit_df)$coefficient
+summary.coeff0
 #Calculating Odd Ratios
 OddRatio = exp(coef(mylogit_df))
 summary.coeff = cbind(Variable = row.names(summary.coeff0), OddRatio, summary.coeff0)
@@ -44,11 +83,12 @@ row.names(std.Coeff) = NULL
 final = merge(summary.coeff, std.Coeff, by = "Variable", all.x = TRUE)
 #
 #Prediction
-pred = predict(mylogit_df,val, type = "response")
-finaldata = cbind(val, pred)
+pred1 = predict(mylogit_df,test_df_rf, type = "response")
+finaldata = cbind(test_df_rf, pred1)
+
 #
 #Storing Model Performance Scores
-pred_val <-prediction(pred ,finaldata$churn)
+pred_val <-prediction(pred1 ,finaldata$churn)
 #
 # Maximum Accuracy and prob. cutoff against it
 acc.perf <- performance(pred_val, "acc")
@@ -101,34 +141,35 @@ row.names(std.Coeff) = NULL
 final = merge(summary.coeff, std.Coeff, by = "Variable", all.x = TRUE)
 #
 #Prediction
-pred1 = predict(mylogit_df1,val, type = "response")
-finaldata = cbind(val, pred)
+pred = predict(mylogit_df1,test_df_knn, type = "response")
+finaldata1 = cbind(test_df_knn, pred)
+
+
 #
 #Storing Model Performance Scores
-pred_val <-prediction(pred ,finaldata$churn)
+pred_val1 <-prediction(pred ,finaldata1$churn)
 #
 # Maximum Accuracy and prob. cutoff against it
-acc.perf <- performance(pred_val, "acc")
-ind = which.max( slot(acc.perf, "y.values")[[1]])
-acc = slot(acc.perf, "y.values")[[1]][ind]
-cutoff = slot(acc.perf, "x.values")[[1]][ind]
+acc.perf1 <- performance(pred_val1, "acc")
+ind1 = which.max( slot(acc.perf1, "y.values")[[1]])
+acc1 = slot(acc.perf1, "y.values")[[1]][ind1]
+cutoff1 = slot(acc.perf1, "x.values")[[1]][ind1]
 #
 # Print Results
-print(c(accuracy= acc, cutoff = cutoff))
+print(c(accuracy= acc1, cutoff = cutoff1))
 #
 # Calculating Area under Curve
-perf_val <- performance(pred_val,"auc")
-perf_val
+perf_val1 <- performance(pred_val1,"auc")
+perf_val1
 #
 # Plotting Lift curve
-plot(performance(pred_val, measure="lift", x.measure="rpp"), colorize=TRUE)
+plot(performance(pred_val1, measure="lift", x.measure="rpp"), colorize=TRUE)
 #
 # Plot the ROC curve
-perf_val2 <- performance(pred_val, "tpr", "fpr")
+perf_val2 <- performance(pred_val1, "tpr", "fpr")
 plot(perf_val2, col = "red", lwd = 1.5)
 #
 #Calculating KS statistics
-ks1.tree <- max(attr(perf_val2, "y.values")[[1]] - (attr(perf_val2, "x.values")[[1]]))
-ks1.tree
+ks1.tree1 <- max(attr(perf_val2, "y.values")[[1]] - (attr(perf_val2, "x.values")[[1]]))
+ks1.tree1
 ```
-

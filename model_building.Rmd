@@ -9,12 +9,12 @@ library(ROCR)
 
 
 ```{r}
-modelRF <- glm(churn~international_plan+voice_mail_plan+total_day_charge+total_eve_charge+total_intl_calls+number_customer_service_calls+state,data=churn_df.imputed,family="binomial")
+modelRF <- glm(churn~international_plan+voice_mail_plan+total_day_charge+total_eve_charge+total_intl_calls+number_customer_service_calls+total_day_minutes+total_eve_minutes+total_night_minutes+total_intl_charge+state,data=churn_df.imputed,family="binomial")
 summary(modelRF)
 ```
 
 ```{r}
-modelKNN <- glm(churn~international_plan+voice_mail_plan+total_day_charge+total_day_minutes+total_intl_calls+number_customer_service_calls+total_eve_minutes+state,data=churn_df.imputed,family="binomial")
+modelKNN <- glm(churn~international_plan+voice_mail_plan+total_day_charge+total_day_minutes+total_intl_calls+number_customer_service_calls+total_eve_minutes+total_eve_charge+total_night_minutes+total_intl_charge+state,data=churn_df.imputed,family="binomial")
 summary(modelKNN)
 ```
 

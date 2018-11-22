@@ -9,12 +9,10 @@ library("magrittr")
 library("ggplot2")
 library("randomForest")
 library("DMwR") # for kNN imputation
-#library("mice")
 ```
 
 ```{r echo = F}
 load("./data/data_exploration.rda")
-set.seed(123)
 ```
 
 ```{r}
@@ -39,7 +37,9 @@ summary(cdf_rf.imputed)
 
 ```{r}
 cdf_knn.imputed <- knnImputation(churn_df_2)
+```
 
+```{r}
 summary(cdf_knn.imputed)
 ```
 
@@ -51,7 +51,7 @@ rf_knn_df <- data.frame(
   rf_total_intl_calls = cdf_rf.imputed$total_intl_calls,
   kNN_total_eve_minutes = cdf_knn.imputed$total_eve_minutes,
   rf_total_eve_minutes = cdf_rf.imputed$total_eve_minutes
-) 
+)
 
 rf_knn_df
 ```
@@ -95,330 +95,182 @@ Stepwise Logistic Regression with R Akaike information criterion (AIC), where AI
 ### 2.1 Stepwise Regression using kNN Imputed Data
 
 ```{r}
-churn_model_knn <- glm(churn~.,data=cdf_knn.imputed,family="binomial")
+churn_model_knn <- glm(churn~., data = cdf_knn.imputed, family = "binomial")
 summary(churn_model_knn)
-
 ```
 
 ```{r}
-churn_stepwise_knn = step(churn_model_knn, direction = c("backward"))
-
+stepwise_knn_bkwd = step(churn_model_knn, direction = c("backward"), trace = F)
 ```
+
 
 ```{r}
-
+summary(stepwise_knn_bkwd)
 ```
+
+
+```{r}
+stepwise_knn_bth = step(churn_model_knn, direction = c("both"), trace = F)
+```
+
+
+```{r}
+summary(stepwise_knn_bth)
+```
+
 
 
 ### 2.2 Stepwise Regression using Randomforest Imputed Data
 
 ```{r}
-churn_model_rf <- glm(churn~.,data=cdf_rf.imputed,family="binomial")
+churn_model_rf <- glm(churn~., data = cdf_rf.imputed, family = "binomial")
 summary(churn_model_rf)
 ```
 
 ```{r}
-churn_stepwise_rf = step(churn_model_rf, direction = c("backward"))
+stepwise_rf_bkwd = step(churn_model_rf, direction = c("backward"), trace = F)
 ```
 
 ```{r}
-
-```
-
-
-
-```{r}
-#xtabs(~ international_plan + churn, data = cdf_rf.imputed)
-#xtabs(~ state + churn, data = cdf_rf.imputed) %>% t()
-#xtabs(~ state + churn, data = cdf_rf.imputed) %>% chisq.test(correct = T)
-```
-
-
-```{r eval = F}
-# Split data into training (70%) and validation (30%)
-
-# Creates a value for dividing the data into train and test. In this case the value is defined as 75% of the number of rows in the dataset
-smp_size = cdf_rf.imputed %>%
-  nrow() %>%
-  multiply_by(0.70) %>%
-  floor()  
-
-# Randomly identifies the rows equal to sample size from all the rows of cdf_rf.imputed dataset and stores the row number in train_ind
-train_index <- cdf_rf.imputed %>%
-  nrow() %>%
-  sample(x = seq_len(.), size = smp_size)
-
-train_df <- cdf_rf.imputed[train_index,]
-test_df <- cdf_rf.imputed[-train_index,] %>% select(-churn)
-
-nrow(train_df)
-nrow(test_df)
-```
-
-
-```{r}
-#Run Logistic Regression
-model4 <- glm(churn~.,data=cdf_rf.imputed,family="binomial")
-summary(model4)
+summary(stepwise_rf_bkwd)
 ```
 
 ```{r}
-#Stepwise Logistic Regression
-mylogit_df = step(model4, direction = c("backward"))
-```
-
-
-
-
-As evident from the final stage of the stepwise regression, the final model in terms of selection was churn ~ international_plan + voice_mail_plan + total_day_minutes +
-    total_day_charge + total_eve_charge + total_night_minutes +
-    total_intl_charge + number_customer_service_calls
-
-In general, the best model is the one with the lowest AIC possible in the logistic regression model with churn as the dependent variable. The final model with the most important variables in predicting churn were, in ascending order: total_day_minutes, total_night_minutes, total_intl_charge, total_eve_charge, voice_mail_,plan,  total_day_charge,  number_customer_service_calls , and international_plan. In other words, international_plan was the best predictor of churn, followed by number_customer_service_calls, etc. In backward, starting out with the full model, the single best predictor was and international_plan.  IThis procedure was used to help in the creation of a best predicted model for churn as the dependent variable.
-
-
-```{r}
-#Run Logistic Regression
-model4 <- glm(churn~.,data=cdf_rf.imputed,family="binomial")
-summary(model4)
-summary(model4)$coefficient
-#Stepwise Logistic Regression
-mylogit_df = step(model4)
-#Logistic Regression Coefficient
-summary.coeff0 = summary(mylogit_df)$coefficient
-#Calculating Odd Ratios
-OddRatio = exp(coef(mylogit_df))
-summary.coeff = cbind(Variable = row.names(summary.coeff0), OddRatio, summary.coeff0)
-row.names(summary.coeff) = NULL
-#
-#R Function : Standardized Coefficients
-stdz.coff <- function (regmodel)
-{ b <- summary(regmodel)$coef[-1,1]
-  sx <- sapply(regmodel$model[-1], sd)
-  beta <-(3^(1/2))/pi * sx * b
-  return(beta)
-}
-
-std.Coeff = data.frame(Standardized.Coeff = stdz.coff(mylogit_df))
-std.Coeff = cbind(Variable = row.names(std.Coeff), std.Coeff)
-row.names(std.Coeff) = NULL
-#
-#Final Summary Report
-final = merge(summary.coeff, std.Coeff, by = "Variable", all.x = TRUE)
-#
-#Prediction
-pred = predict(mylogit_df,val, type = "response")
-finaldata = cbind(val, pred)
-#
-#Storing Model Performance Scores
-library(ROCR)
-pred_val <-prediction(pred ,finaldata$churn)
-#
-# Maximum Accuracy and prob. cutoff against it
-acc.perf <- performance(pred_val, "acc")
-ind = which.max( slot(acc.perf, "y.values")[[1]])
-acc = slot(acc.perf, "y.values")[[1]][ind]
-cutoff = slot(acc.perf, "x.values")[[1]][ind]
-#
-# Print Results
-print(c(accuracy= acc, cutoff = cutoff))
-#
-# Calculating Area under Curve
-perf_val <- performance(pred_val,"auc")
-perf_val
-#
-# Plotting Lift curve
-plot(performance(pred_val, measure="lift", x.measure="rpp"), colorize=TRUE)
-#
-# Plot the ROC curve
-perf_val2 <- performance(pred_val, "tpr", "fpr")
-plot(perf_val2, col = "green", lwd = 1.5)
-#
-#Calculating KS statistics
-ks1.tree <- max(attr(perf_val2, "y.values")[[1]] - (attr(perf_val2, "x.values")[[1]]))
-ks1.tree
-
+stepwise_rf_bth = step(churn_model_rf, direction = c("both"), trace = F)
 ```
 
 ```{r}
-mylogit_df3 = step(model4, direction = c("both"))
+summary(stepwise_rf_bth)
 ```
 
-#### Standardization of area_code, international_plan, voice_mail_plan for KNN imputation
-```{r}
-area_fn <- function(area_code) {
-  if(area_code == "area_code_408"){
-    return(0)
-  } else if (area_code == "area_code_415") {
-    return(1)
-  } else {
-    return(2)
-  }
-}
+In general, the best model is the one with the lowest AIC possible in the logistic regression model with churn as the dependent variable. The final model with the most important variables in predicting churn were, in ascending order:
 
-x <- churn_df_1 %>%
-  transform(
-    churn = ifelse(churn == "no", 0, 1),
-    international_plan = ifelse(international_plan == "no", 0, 1),
-    voice_mail_plan = ifelse(voice_mail_plan == "no", 0,1),
-    area_code = sapply(area_code, area_fn)
+1. `total_day_minutes`
+2. `total_night_minutes`
+3. `total_intl_charge`
+4. `total_eve_charge`
+3. `voice_mail_plan`
+4. `total_day_charge `
+5. `number_customer_service_calls`
+6. `international_plan`
+
+In other words, `international_plan` was the best predictor of churn followed by `number_customer_service_calls` etc. In backward, starting out with the full model, the single best predictor was `international_plan`.  IThis procedure was used to help in the creation of a best predicted model for churn as the dependent variable.
+
+### 2.3 Finding The Best Predictor Variables
+
+```{r echo = F}
+fmt_formula <- function(formula) {
+  return (formula %>%
+            as.character() %>%
+            extract(c(2, 1, 3)) %>%
+            paste(collapse = '')
   )
-x
-```
-## checking for NA values in standardized dataset
-```{r}
-anyNA(x)
+}
 ```
 
-##checking for NA values in KNN imputed dataset
+The table below shows the final models obtained from performing step wise regression in __backward__ direction. On the left we have he model using the Rainforest imputed missing values and on the right we have a model using the kNN imputed missing values.
 
-```{r}
-knnOutput <- knnImputation(x)    #[, !names(churn_df_1) %in% "churn"])  # perform knn imputation.
-anyNA(knnOutput)
+||RandomForest|kNN|
+|-----|:------|:-----|
+|AIC|`r stepwise_rf_bkwd$aic`|`r stepwise_knn_bkwd$aic`|
+|Formula|`r {fmt_formula(stepwise_rf_bkwd$formula)} `| `r {fmt_formula(stepwise_knn_bkwd$formula)} `|
 
+The table below shows the final models obtained from performing step wise regression in __both__ direction. On the left we have he model using the Rainforest imputed missing values and on the right we have a model using the kNN imputed missing values.
+
+||RandomForest|kNN|
+|-----|:------|:-----|
+|AIC|`r stepwise_rf_bth$aic`|`r stepwise_knn_bth$aic`|
+|Formula|`r {fmt_formula(stepwise_rf_bth$formula)} `| `r {fmt_formula(stepwise_knn_bth$formula)} `|
+
+
+The common variables in all the four stepwise regressions are:
+
+1. `international_plan`
+2. `voice_mail_plan`
+3. `total_day_minutes`
+4. `total_day_charge`
+5. `total_night_minutes`
+6. `total_intl_calls`
+7. `total_intl_charge`
+8. `number_customer_service_calls`
+
+The variables that are not common to all four models are:
+
+1. `total_eve_minutes`
+2. `total_eve_charge`
+
+We suggest that these 10 variables be used in the next stage of the model building process.
+
+__Random forest significant attributes__
 ```
-
-### Building a model with KNN imputed dataset
-```{r}
-model5 <- glm(churn ~.,data=knnOutput,family="binomial")
-summary(model5)
-```
-### Stepwise regression using the KNN imputed Model with direction = backward
-```{r}
-mylogit_df2 = step(model5, direction = c("backward"))
-```
-
-### Stepwise regression using the KNN imputed Model with direction = both
-```{r}
-mylogit_df3 = step(model5, direction = c("both"))
-```
-
-## Stepwise regression comparisons between randomforest and KNN imputed datasets
-## Randomforest direction = backward
-Step:  AIC=2062.31
-churn ~ international_plan + voice_mail_plan + total_day_minutes +
-    total_day_charge + total_eve_charge + total_night_minutes +
-    total_intl_calls + total_intl_charge + number_customer_service_calls
-
-## Randomforest direction = both
-Step:  AIC=2062.31
-churn ~ international_plan + voice_mail_plan + total_day_minutes +
-    total_day_charge + total_eve_charge + total_night_minutes +
-    total_intl_calls + total_intl_charge + number_customer_service_calls
-
-## KNN direction = backward
-Step:  AIC=2057.47
-churn ~ international_plan + voice_mail_plan + total_day_minutes +
-    total_day_charge + total_eve_minutes + total_night_minutes +
-    total_intl_calls + total_intl_charge + number_customer_service_calls
-
-## KNN direction = both
-Step:  AIC=2057.47
-churn ~ international_plan + voice_mail_plan + total_day_minutes +
-    total_day_charge + total_eve_minutes + total_night_minutes +
-    total_intl_calls + total_intl_charge + number_customer_service_calls
-
-## The common variables in all the four stepwise regressions are :
-international_plan
-voice_mail_plan
-total_day_minutes
-total_day_charge
-total_night_minutes
-total_intl_calls
-total_intl_charge
-number_customer_service_calls
-TOTAL = 8
-## The additional variables not common in all four stepwise regressions are:
-total_eve_minutes
-total_eve_charge
-TOTAL = 2
-GRAND TOTAL = 10
-## We suggest that these 10 variables be used in the next stage which is the model building process.
-
-
-
-
-
-## Finding the best predictor variables
-
-## Random forest significant attributes
 international_planyes          2.1972515  0.1589164  13.826  < 2e-16 ***
-voice_mail_planyes            -1.0275099  0.3676354  -2.795 0.005191 ** 
+voice_mail_planyes            -1.0275099  0.3676354  -2.795 0.005191 **
 total_day_charge               0.0805890  0.0080508  10.010  < 2e-16 ***
 total_eve_charge               0.0830480  0.0249265   3.332 0.000863 ***
-total_intl_calls              -0.0837351  0.0267472  -3.131 0.001744 ** 
+total_intl_calls              -0.0837351  0.0267472  -3.131 0.001744 **
 number_customer_service_calls  0.5395426  0.0420437  12.833  < 2e-16 ***
-states (12) 
-stateCA                        1.9772622  0.7938041   2.491 0.012743 *  
-stateME                        1.2932594  0.7391097   1.750 0.080161 .  
-stateMI                        1.4919750  0.7224169   2.065 0.038899 *  
-stateMN                        1.2142000  0.7194116   1.688 0.091456 .  
-stateMS                        1.2761173  0.7383695   1.728 0.083936 .  
-stateMT                        1.7768485  0.7233884   2.456 0.014038 *  
-stateNJ                        1.5639891  0.7174847   2.180 0.029271 *  
-stateNV                        1.3044053  0.7301848   1.786 0.074034 .  
-stateSC                        1.7432299  0.7519276   2.318 0.020430 *  
-stateTX                        1.6774593  0.7127652   2.353 0.018600 *  
-stateUT                        1.2332761  0.7465346   1.652 0.098534 .  
-stateWA                        1.5031936  0.7340795   2.048 0.040587 *  
+```
+***
+```
+states (12)
+
+stateCA                        1.9772622  0.7938041   2.491 0.012743 *
+stateME                        1.2932594  0.7391097   1.750 0.080161 .
+stateMI                        1.4919750  0.7224169   2.065 0.038899 *
+stateMN                        1.2142000  0.7194116   1.688 0.091456 .
+stateMS                        1.2761173  0.7383695   1.728 0.083936 .
+stateMT                        1.7768485  0.7233884   2.456 0.014038 *
+stateNJ                        1.5639891  0.7174847   2.180 0.029271 *
+stateNV                        1.3044053  0.7301848   1.786 0.074034 .
+stateSC                        1.7432299  0.7519276   2.318 0.020430 *
+stateTX                        1.6774593  0.7127652   2.353 0.018600 *
+stateUT                        1.2332761  0.7465346   1.652 0.098534 .
+stateWA                        1.5031936  0.7340795   2.048 0.040587 *
+```
 Only Random forest had an additional state MN as compared to KNN
-## KNN significant attributes
+
+__KNN significant attributes__
+```
 international_plan             2.205e+00  1.594e-01  13.835  < 2e-16 ***
-voice_mail_plan               -1.252e+00  4.395e-01  -2.849  0.00438 ** 
-total_day_minutes             -5.762e-03  2.240e-03  -2.572  0.01010 *  
+voice_mail_plan               -1.252e+00  4.395e-01  -2.849  0.00438 **
+total_day_minutes             -5.762e-03  2.240e-03  -2.572  0.01010 *
 total_day_charge               1.074e-01  1.375e-02   7.813 5.58e-15 ***
-total_eve_minutes              1.106e-02  4.403e-03   2.511  0.01204 *  
-total_intl_calls              -8.585e-02  2.679e-02  -3.205  0.00135 ** 
+total_eve_minutes              1.106e-02  4.403e-03   2.511  0.01204 *
+total_intl_calls              -8.585e-02  2.679e-02  -3.205  0.00135 **
 number_customer_service_calls  5.432e-01  4.221e-02  12.868  < 2e-16 ***
+```
+***
+```
 states(11)
-stateCA                        1.956e+00  7.908e-01   2.473  0.01339 *  
-stateME                        1.256e+00  7.389e-01   1.700  0.08904 .  
-stateMI                        1.465e+00  7.217e-01   2.030  0.04234 *  
-stateMS                        1.253e+00  7.375e-01   1.699  0.08926 .  
-stateMT                        1.754e+00  7.235e-01   2.424  0.01535 *  
-stateNJ                        1.539e+00  7.166e-01   2.148  0.03173 *  
-stateNV                        1.217e+00  7.316e-01   1.663  0.09632 .  
-stateSC                        1.735e+00  7.498e-01   2.314  0.02064 *  
-stateTX                        1.674e+00  7.108e-01   2.355  0.01852 *  
-stateUT                        1.229e+00  7.463e-01   1.646  0.09968 .  
-stateWA                        1.471e+00  7.321e-01   2.009  0.04455 *  
-
-## We recommend the following variables for the initial model building(* denotes stepwise regression results)
-international_planyes          
-voice_mail_planyes            
-total_day_charge               
-total_eve_charge                                                  
-total_intl_calls              
-number_customer_service_calls 
-total_day_minutes 
-total_eve_minutes
-total_night_minutes*
-total_intl_charge*
-
-## We recommend the following states for the initial model building
-stateCA                        
-stateME                          
-stateMI                        
-stateMN                          
-stateMS                          
-stateMT                        
-stateNJ                        
-stateNV                        
-stateSC                        
-stateTX                        
-stateUT                          
+stateCA                        1.956e+00  7.908e-01   2.473  0.01339 *
+stateME                        1.256e+00  7.389e-01   1.700  0.08904 .
+stateMI                        1.465e+00  7.217e-01   2.030  0.04234 *
+stateMS                        1.253e+00  7.375e-01   1.699  0.08926 .
+stateMT                        1.754e+00  7.235e-01   2.424  0.01535 *
+stateNJ                        1.539e+00  7.166e-01   2.148  0.03173 *
+stateNV                        1.217e+00  7.316e-01   1.663  0.09632 .
+stateSC                        1.735e+00  7.498e-01   2.314  0.02064 *
+stateTX                        1.674e+00  7.108e-01   2.355  0.01852 *
+stateUT                        1.229e+00  7.463e-01   1.646  0.09968 .
+stateWA                        1.471e+00  7.321e-01   2.009  0.04455 *
+```
+__We recommend the following states for the initial model building__
+```
+stateCA
+stateME
+stateMI
+stateMN
+stateMS
+stateMT
+stateNJ
+stateNV
+stateSC
+stateTX
+stateUT
 stateWA
+```
+We will save the data frames, `cdf_knn.imputed` and `cdf_rf.imputed` for the model building process.
 
-
-
-
-
-
-
-
-
-
-
-
-
-
+```{r}
+save(cdf_knn.imputed, cdf_rf.imputed, file = "data/data_prep.rda")
+```

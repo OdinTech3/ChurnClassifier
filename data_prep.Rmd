@@ -105,7 +105,7 @@ churn_model_knn <- glm(churn~., data = cdf_knn.imputed, family = "binomial")
 summary(churn_model_knn)
 ```
 
-Using the 'backwards' option, we proceed to identify the variables that have a significant impact in determining 'churn', using the kNN imputed values.
+Using the 'backward' option, we proceed to identify the variables that have a significant impact in determining 'churn', using the kNN imputed values.
 
 ```{r}
 stepwise_knn_bkwd = step(churn_model_knn, direction = c("backward"), trace = F)

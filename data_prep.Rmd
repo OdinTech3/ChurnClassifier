@@ -92,16 +92,20 @@ whereas for kNN, the values lie within a considerably narrow band of 100 - 350 o
 
 ## 2. Stepwise Regression
 
-Stepwise regression is a semi-automated process of building a model by successively adding or removing variables based on the t-statistics of their estimated coefficients. The stepwise option lets you either begin with no variables in the model and proceed forward (i.e., adding one variable at a time). The other option is to start with all potential variables in the model and proceed backward (i.e., removing one variable at a time). At each step, the program performs for each variable currently in the model the t-statistic for its estimated coefficient. For each variable not in the model, it computes the t-statistic that its coefficient would have if it were the next variable added, squares it. At the next step, the program automatically enters the variable with the highest statistic (forward), or removes the variable with the lowest statistic (backward). In general, as in this case, if you have a modest-sized set of potential variables from which you wish to eliminate a few (i.e., if you're fine-tuning some prior selection of variables), you should generally go backward.
+Stepwise regression is a semi-automated process of building a model by successively adding or removing variables based on the t-statistics of their estimated coefficients. The stepwise option lets you either begin with no variables in the model and proceed forward (i.e., adding one variable at a time) or start with all potential variables in the model and proceed backwards (i.e., removing one variable at a time). At each step, the program performs for each variable currently in the model the t-statistic for its estimated coefficient. For each variable not in the model, it computes the t-statistic that its coefficient would have if it were the next variable added, and squares it. At the next step, the program automatically enters the variable with the highest statistic (forward), or removes the variable with the lowest statistic (backward). In general, as in this case, if you have a modest-sized set of potential variables from which you wish to eliminate a few (i.e., if you're fine-tuning some prior selection of variables), you should generally go backward.
 
-Stepwise Logistic Regression with R Akaike information criterion (AIC), where AIC = 2k - 2 log L = 2k + Deviance, where k = number of parameters. In general, smaller numbers are better.  Stepwise Logistic Regression penalizes models with many independent or predictor parameters and with models with poor fit.  In general, the lower value of AIC suggests "better" model, but it is a relative measure of model fit. It is used for model selection (i.e. it lets you compare different models estimated on the same dataset. Backwards selection is the default in the Logistic Regression method. Although there may be some evidence in the logistic regression literature that backward selection is less successful than forward selection. This may be due that the full model fit in the first step is the model most likely to result in a complete or quasi-complete separation of response values. However, backward seemed to be successful in this case. As a warning, since the interpretation of coefficients in a model depends on the other terms included, it may seem unwise to let an automatic algorithm determine the questions that we should ask about our data. The decision which variables to include into an analysis should be based on theory. However, there is little theory about these variables, so we need to operate on common business application.
+Stepwise Logistic Regression with R Akaike information criterion (AIC), where AIC = 2k - 2 log L = 2k + Deviance, where k = number of parameters. In general, smaller numbers are better.  Stepwise Logistic Regression penalizes models with many independent or predictor parameters and with models with poor fit.  In general, the lower value of AIC suggests "better" model, but it is a relative measure of model fit. It is used for model selection (i.e. it lets you compare different models estimated on the same dataset. Backwards selection is the default in the Logistic Regression method, although there may be some evidence in the logistic regression literature that backward selection is less successful than forward selection. This may be due to the fact that the full model fit in the first step is the model most likely to result in a complete or quasi-complete separation of response values. However, backward seemed to be successful in this case. As a warning, since the interpretation of coefficients in a model depends on the other terms included, it may seem unwise to let an automatic algorithm determine the questions that we should ask about our data. The decision which variables to include into an analysis should be based on theory. However, there is little theory about these variables, so we need to operate on common business application.
 
 ### 2.1 Stepwise Regression using kNN Imputed Data
+
+Using Stepwise Regression, we proceed to identify the variables that may have a significant impact in determining 'churn', using the kNN imputed values. The chunk also identifies states which may be impacted by churn.
 
 ```{r}
 churn_model_knn <- glm(churn~., data = cdf_knn.imputed, family = "binomial")
 summary(churn_model_knn)
 ```
+
+Using the 'backwards' option, we proceed to identify the variables that have a significant impact in determining 'churn', using the kNN imputed values.
 
 ```{r}
 stepwise_knn_bkwd = step(churn_model_knn, direction = c("backward"), trace = F)
@@ -111,6 +115,9 @@ stepwise_knn_bkwd = step(churn_model_knn, direction = c("backward"), trace = F)
 ```{r}
 summary(stepwise_knn_bkwd)
 ```
+
+Continuing with using Stepwise Regression but amending direction to 'both', we again proceed to identify the variables that may have a significant impact in determining 'churn', using the kNN imputed values.
+The outputs from both chunks - direction backward & both - is seen to be identical in all respects.
 
 
 ```{r}
@@ -126,10 +133,14 @@ summary(stepwise_knn_bth)
 
 ### 2.2 Stepwise Regression using Randomforest Imputed Data
 
+Using Stepwise Regression, we proceed to identify the variables that may have a significant impact in determining 'churn', using the RandomForest imputed values. The chunk also identifies states which may be impacted by churn.
+
 ```{r}
 churn_model_rf <- glm(churn~., data = cdf_rf.imputed, family = "binomial")
 summary(churn_model_rf)
 ```
+
+Using the 'backward' option, we proceed to identify the variables that have a significant impact in determining 'churn', using the RandomForest imputed values.
 
 ```{r}
 stepwise_rf_bkwd = step(churn_model_rf, direction = c("backward"), trace = F)

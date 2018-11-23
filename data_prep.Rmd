@@ -150,6 +150,11 @@ stepwise_rf_bkwd = step(churn_model_rf, direction = c("backward"), trace = F)
 summary(stepwise_rf_bkwd)
 ```
 
+Continuing with using Stepwise Regression and the RandomForest imputed values, but amending direction to 'both', we again proceed to identify the variables that may have a significant impact in determining 'churn'.
+
+On comparison of the outputs from both chunks - direction backward & both - it is seen to be identical in all respects.
+
+
 ```{r}
 stepwise_rf_bth = step(churn_model_rf, direction = c("both"), trace = F)
 ```
@@ -169,7 +174,7 @@ In general, the best model is the one with the lowest AIC possible in the logist
 5. `number_customer_service_calls`
 6. `international_plan`
 
-In other words, `international_plan` was the best predictor of churn followed by `number_customer_service_calls` etc. In backward, starting out with the full model, the single best predictor was `international_plan`.  IThis procedure was used to help in the creation of a best predicted model for churn as the dependent variable.
+In other words, `international_plan` was considered the best predictor of churn followed by `number_customer_service_calls` etc. In backward, starting out with the full model, the single best predictor was `international_plan`.  This procedure was used to help in the creation of a best predicted model for churn as the dependent variable.
 
 ### 2.3 Finding The Best Predictor Variables
 
@@ -183,14 +188,14 @@ fmt_formula <- function(formula) {
 }
 ```
 
-The table below shows the final models obtained from performing step wise regression in __backward__ direction. On the left we have he model using the Rainforest imputed missing values and on the right we have a model using the kNN imputed missing values.
+The table below shows the final models obtained from performing step wise regression in __backward__ direction. On the left we have the model using the RandomForest imputed missing values and on the right we have the model using the kNN imputed missing values.
 
 ||RandomForest|kNN|
 |-----|:------|:-----|
 |AIC|`r stepwise_rf_bkwd$aic`|`r stepwise_knn_bkwd$aic`|
 |Formula|`r {fmt_formula(stepwise_rf_bkwd$formula)} `| `r {fmt_formula(stepwise_knn_bkwd$formula)} `|
 
-The table below shows the final models obtained from performing step wise regression in __both__ direction. On the left we have he model using the Rainforest imputed missing values and on the right we have a model using the kNN imputed missing values.
+The table below shows the final models obtained from performing step wise regression in __both__ direction. On the left we have the model using the Rainforest imputed missing values and on the right we have a model using the kNN imputed missing values.
 
 ||RandomForest|kNN|
 |-----|:------|:-----|
@@ -198,7 +203,7 @@ The table below shows the final models obtained from performing step wise regres
 |Formula|`r {fmt_formula(stepwise_rf_bth$formula)} `| `r {fmt_formula(stepwise_knn_bth$formula)} `|
 
 
-The common variables in all the four stepwise regressions are:
+The common variables in each of the four stepwise regressions are:
 
 1. `international_plan`
 2. `voice_mail_plan`
@@ -209,7 +214,7 @@ The common variables in all the four stepwise regressions are:
 7. `total_intl_charge`
 8. `number_customer_service_calls`
 
-The variables that are not common to all four models are:
+The variables that are not common to the four models are:
 
 1. `total_eve_minutes`
 2. `total_eve_charge`
@@ -242,7 +247,7 @@ stateTX                        1.6774593  0.7127652   2.353 0.018600 *
 stateUT                        1.2332761  0.7465346   1.652 0.098534 .
 stateWA                        1.5031936  0.7340795   2.048 0.040587 *
 ```
-Only Random forest had an additional state MN as compared to KNN
+Only RandomForest had an additional state MN as compared to KNN
 
 __KNN significant attributes__
 ```

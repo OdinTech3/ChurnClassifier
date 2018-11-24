@@ -3,7 +3,7 @@ title: "Model building"
 output: html_notebook
 ---
 
-```{r}
+```{r warning = F}
 library("magrittr")
 library("ROCR")
 library("pROC")

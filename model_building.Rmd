@@ -1,0 +1,262 @@
+---
+title: "Model building"
+output: html_notebook
+---
+
+```{r warning = F}
+library("magrittr")
+library("ROCR")
+library("pROC")
+```
+
+```{r echo = F}
+load("./data/data_prep.rda")
+```
+
+```{r echo = F}
+# A function to split data into training (70%) and validation (30%)
+
+create_data_partition <- function(dataset, train_size = 0.70) {
+  # Creates a value for dividing the data into train and test.
+  smp_size = cdf_rf.imputed %>%
+    nrow() %>%
+    multiply_by(train_size) %>%
+    floor()
+
+  # Randomly identifies the rows equal to sample size from all the rows of dataset dataset
+  # and stores the row number in train_ind
+  return(dataset %>%
+           nrow() %>%
+           sample(x = seq_len(.), size = smp_size)
+  )
+}
+```
+
+```{r}
+set.seed(123)
+
+rf_train_index <- create_data_partition(cdf_rf.imputed)
+
+train_df_rf <- cdf_rf.imputed[rf_train_index,]
+test_df_rf <- cdf_rf.imputed[-rf_train_index,]
+
+modelRF <- glm(
+  churn~international_plan +
+    voice_mail_plan +
+    total_day_charge +
+    total_eve_charge +
+    total_intl_calls +
+    number_customer_service_calls +
+    total_day_minutes +
+    total_eve_minutes +
+    total_night_minutes +
+    total_intl_charge +
+    state,
+  data = train_df_rf ,
+  family = "binomial"
+)
+
+summary(modelRF)
+```
+
+```{r}
+set.seed(123)
+
+knn_train_index <- create_data_partition(cdf_knn.imputed)
+
+train_df_knn <- cdf_knn.imputed[knn_train_index,]
+test_df_knn <- cdf_knn.imputed[-knn_train_index,]
+
+modelKNN <- glm(
+  churn~international_plan +
+    voice_mail_plan +
+    total_day_charge +
+    total_eve_charge +
+    total_intl_calls +
+    number_customer_service_calls +
+    total_day_minutes +
+    total_eve_minutes +
+    total_night_minutes +
+    total_intl_charge +
+    state,
+  data = train_df_knn,
+  family = "binomial"
+)
+
+summary(modelKNN)
+```
+
+```{r}
+#Stepwise Logistic Regression
+mylogit_df = step(modelRF)
+
+#Logistic Regression Coefficient
+summary.coeff0 = summary(mylogit_df)$coefficient
+summary.coeff0
+
+#Calculating Odd Ratios
+OddRatio = exp(coef(mylogit_df))
+summary.coeff = cbind(Variable = row.names(summary.coeff0), OddRatio, summary.coeff0)
+row.names(summary.coeff) = NULL
+
+# A Function to Standardized Coefficients
+stdz.coff <- function (regmodel)
+{ b <- summary(regmodel)$coef[-1,1]
+  sx <- sapply(regmodel$model[-1], sd)
+  beta <-(3^(1/2))/pi * sx * b
+  return(beta)
+}
+
+std.Coeff = data.frame(Standardized.Coeff = stdz.coff(mylogit_df))
+std.Coeff = cbind(Variable = row.names(std.Coeff), std.Coeff)
+row.names(std.Coeff) = NULL
+
+#Final Summary Report
+final = merge(summary.coeff, std.Coeff, by = "Variable", all.x = TRUE)
+final
+
+#Prediction
+pred1 = predict(mylogit_df,test_df_rf, type = "response")
+finaldata = cbind(test_df_rf, pred1)
+
+#Storing Model Performance Scores
+pred_val <-prediction(pred1 ,finaldata$churn)
+
+
+# Maximum Accuracy and prob. cutoff against it
+acc.perf <- performance(pred_val, "acc")
+ind = which.max( slot(acc.perf, "y.values")[[1]])
+acc = slot(acc.perf, "y.values")[[1]][ind]
+cutoff = slot(acc.perf, "x.values")[[1]][ind]
+
+# Print Results
+print(c(accuracy= acc, cutoff = cutoff))
+
+# Calculating Area under Curve
+perf_val <- performance(pred_val,"auc")
+perf_val
+
+# Plotting Lift curve
+plot(performance(pred_val, measure="lift", x.measure="rpp"), colorize=TRUE)
+
+#Lift is a measure of effectiveness of a predicted model calculated as the ratio between the results obtained with and without the predictive model.
+
+#Cummulative gains and lift charts are visual aids for measuring model performance.
+# Plot the ROC curve
+perf_val2 <- performance(pred_val, "tpr", "fpr")
+plot(perf_val2, col = "blue", lwd = 1.5)
+
+#Calculating KS statistics
+ks1.tree <- max(attr(perf_val2, "y.values")[[1]] - (attr(perf_val2, "x.values")[[1]]))
+ks1.tree
+```
+
+```{r}
+#Stepwise Logistic Regression
+mylogit_df1 = step(modelKNN)
+#Logistic Regression Coefficient
+summary.coeff0 = summary(mylogit_df1)$coefficient
+#Calculating Odd Ratios
+OddRatio = exp(coef(mylogit_df1))
+summary.coeff = cbind(Variable = row.names(summary.coeff0), OddRatio, summary.coeff0)
+row.names(summary.coeff) = NULL
+#
+#R Function : Standardized Coefficients
+stdz.coff <- function (regmodel)
+{ b <- summary(regmodel)$coef[-1,1]
+  sx <- sapply(regmodel$model[-1], sd)
+  beta <-(3^(1/2))/pi * sx * b
+  return(beta)
+}
+
+std.Coeff = data.frame(Standardized.Coeff = stdz.coff(mylogit_df1))
+std.Coeff = cbind(Variable = row.names(std.Coeff), std.Coeff)
+row.names(std.Coeff) = NULL
+#
+#Final Summary Report
+final = merge(summary.coeff, std.Coeff, by = "Variable", all.x = TRUE)
+#
+#Prediction
+pred = predict(mylogit_df1,test_df_knn, type = "response")
+finaldata1 = cbind(test_df_knn, pred)
+
+
+#
+#Storing Model Performance Scores
+pred_val1 <-prediction(pred ,finaldata1$churn)
+#
+# Maximum Accuracy and prob. cutoff against it
+acc.perf1 <- performance(pred_val1, "acc")
+ind1 = which.max( slot(acc.perf1, "y.values")[[1]])
+acc1 = slot(acc.perf1, "y.values")[[1]][ind1]
+cutoff1 = slot(acc.perf1, "x.values")[[1]][ind1]
+#
+# Print Results
+print(c(accuracy= acc1, cutoff = cutoff1))
+#
+# Calculating Area under Curve
+perf_val1 <- performance(pred_val1,"auc")
+perf_val1
+#
+# Plotting Lift curve
+plot(performance(pred_val1, measure="lift", x.measure="rpp"), colorize=TRUE)
+#
+# Plot the ROC curve
+perf_val2 <- performance(pred_val1, "tpr", "fpr")
+plot(perf_val2, col = "red", lwd = 1.5)
+#
+#Calculating KS statistics
+ks1.tree1 <- max(attr(perf_val2, "y.values")[[1]] - (attr(perf_val2, "x.values")[[1]]))
+ks1.tree1
+```
+
+
+
+```{r}
+pred_churn_rf <- predict(modelRF, newdata = test_df_rf, type = "response")
+roc_out_rf <- roc(test_df_rf$churn, pred_churn_rf)
+
+roc_out_rf
+```
+
+```{r}
+plot(roc_out_rf, col = "red", lwd = 3)
+```
+
+```{r}
+pred_churn_knn <- predict(modelKNN, newdata = test_df_knn, type = "response")
+roc_out_knn <- roc(test_df_knn$churn, pred_churn_knn)
+roc_out_knn
+```
+
+```{r}
+plot(roc_out_knn, col = "red", lwd = 3)
+```
+
+
+```{r}
+we_predicted <- as.factor(pred_churn_rf > 0.25)
+head(we_predicted)
+```
+
+```{r}
+levels(we_predicted)  <- list(no = "FALSE", yes = "TRUE")
+table(we_predicted, True = test_df_rf$churn)
+```
+
+
+
+
+
+
+```{r}
+save(modelKNN, modelRF, file = "data/model_building.rda")
+```
+
+
+
+
+
+
+
+

@@ -3,7 +3,7 @@ title: "Data Preparation"
 output: html_notebook
 ---
 
-```{r warnin = F}
+```{r warning = F}
 library("dplyr")
 library("magrittr")
 library("ggplot2")

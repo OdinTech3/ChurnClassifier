@@ -15,10 +15,6 @@ library("DMwR") # for kNN imputation
 load("./data/data_exploration.rda")
 ```
 
-```{r}
-summary(churn_df_2)
-```
-
 ## 1. Data Imputation
 
 ### 1.1 Data Imputation using Rainforest

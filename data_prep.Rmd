@@ -144,7 +144,7 @@ stepwise_knn_bkwd = step(churn_model_knn, direction = c("backward"), trace = F)
 summary(stepwise_knn_bkwd)
 ```
 
-Continuing with stepwise regression on kNN imputed data but including direction as 'backward', the model outputs the variables international_planyes, voice_mail_planyes, total_day_minutes, total_day_charge, total_eve_minutes, total_night_minutes, total_intl_calls, total_intl_charge and number_customer_service_calls as being significant towards predicition of churn.
+Continuing to refine the model with stepwise regression on kNN imputed data but including direction as 'backward', the model outputs the variables international_planyes, voice_mail_planyes, total_day_minutes, total_day_charge, total_eve_minutes, total_night_minutes, total_intl_calls, total_intl_charge and number_customer_service_calls as being significant towards predicition of churn.
 
 
 Continuing with using Stepwise Regression but amending direction to 'both', we again proceed to identify the variables that may have a significant impact in determining 'churn', using the kNN imputed values.
@@ -160,6 +160,8 @@ stepwise_knn_bth = step(churn_model_knn, direction = c("both"), trace = F)
 summary(stepwise_knn_bth)
 ```
 
+Continuing with stepwise regression on kNN imputed data but amending direction to 'both', the model outputs the variables international_planyes, voice_mail_planyes, total_day_minutes, total_day_charge, total_eve_minutes, total_night_minutes, total_intl_calls, total_intl_charge and number_customer_service_calls as being significant.
+We notice that these variables are the same as those identified in the 'backward' direction.
 
 
 ### 2.2 Stepwise Regression using Randomforest Imputed Data

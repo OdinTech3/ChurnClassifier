@@ -161,7 +161,7 @@ summary(stepwise_knn_bth)
 ```
 
 Continuing with stepwise regression on kNN imputed data but amending direction to 'both', the model outputs the variables international_planyes, voice_mail_planyes, total_day_minutes, total_day_charge, total_eve_minutes, total_night_minutes, total_intl_calls, total_intl_charge and number_customer_service_calls as being significant.
-We notice that these variables are the same as those identified in the 'backward' direction.
+We notice that these variables are the same as those identified in the 'backward' direction with AIC at 2060.2
 
 
 ### 2.2 Stepwise Regression using Randomforest Imputed Data
@@ -172,6 +172,8 @@ Using Stepwise Regression, we proceed to identify the variables that may have a 
 churn_model_rf <- glm(churn~., data = cdf_rf.imputed, family = "binomial")
 summary(churn_model_rf)
 ```
+
+From the output of the churn model using stepwise regression on RandomForest imputed data, we see that the 6 variables number_customer_service_calls, total_day_charge, international_planyes, total_intl_calls, voice_mail_planyes and total_eve_charge are projected to have a likely impact on 'churn'. The output also points towards states that may experience a higher churn rate than others (shown by * as well as by .). We will refine this output in the following steps using direction, backward and both.
 
 Using the 'backward' option, we proceed to identify the variables that have a significant impact in determining 'churn', using the RandomForest imputed values.
 

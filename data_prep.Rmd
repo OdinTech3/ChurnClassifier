@@ -17,7 +17,7 @@ load("./data/data_exploration.rda")
 
 ## 1. Data Imputation
 
-### 1.1 Data Imputation using Rainforest
+### 1.1 Data Imputation using RandomForest
 
 The proximity matrix from the randomForest is used to update the imputation of the NAs. For continuous predictors, the imputed value is the weighted average of the non-missing observations, where the weights are the proximities. For categorical predictors, the imputed value is the category with the largest average proximity. This process is iterated n times.
 

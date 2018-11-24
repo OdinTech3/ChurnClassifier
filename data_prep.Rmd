@@ -3,7 +3,7 @@ title: "Data Preparation"
 output: html_notebook
 ---
 
-```{r}
+```{r warnin = F}
 library("dplyr")
 library("magrittr")
 library("ggplot2")
@@ -39,20 +39,34 @@ cdf_knn.imputed <- knnImputation(churn_df_2)
 summary(cdf_knn.imputed)
 ```
 
-### 1.3 kNN vs Rainforest for Data Imputation
+### 1.3 kNN vs RandomForest for Data Imputation
+
+In order to compare the the values imputed using kNN and RandomForest we must first extract the indexes in `churn_df_2` where there was an `NA`. Since both RandomForest and kNN only imputes values where there `NA` exists, we only have to look at the variables `total_intl_calls` and `total_eve_minutes` in which values which were imputed.
 
 ```{r}
+where.is_na <- function(df, var_name) {
+  return(which(is.na(extract(df, var_name))))
+}
+
+only.where_was_na <- function(df, var_name) {
+  return(df %>%
+           extract2(var_name) %>%
+           extract(where.is_na(churn_df_2, var_name))
+         )
+}
+
+# Create a data frame of all the imputed values from variables total_intl_calls and total_eve_minutes
 rf_knn_df <- data.frame(
-  kNN_total_intl_calls = cdf_knn.imputed$total_intl_calls,
-  rf_total_intl_calls = cdf_rf.imputed$total_intl_calls,
-  kNN_total_eve_minutes = cdf_knn.imputed$total_eve_minutes,
-  rf_total_eve_minutes = cdf_rf.imputed$total_eve_minutes
+  kNN_total_intl_calls = cdf_knn.imputed %>% only.where_was_na("total_intl_calls"),
+  rf_total_intl_calls = cdf_rf.imputed %>% only.where_was_na("total_intl_calls"),
+  kNN_total_eve_minutes = cdf_knn.imputed %>% only.where_was_na("total_eve_minutes"),
+  rf_total_eve_minutes = cdf_rf.imputed %>% only.where_was_na("total_eve_minutes")
 )
 
 rf_knn_df
 ```
 
-The below plots show a visual representation of the variables `total_intl_calls` and `total_eve_minutes` with the imputed values through both the kNN and RandomForest methods.
+The below plots show a visual representation of the imputed values from variables `total_intl_calls` and `total_eve_minutes` using both the kNN and RandomForest methods.
 
 ```{r}
 ggplot(rf_knn_df) +
@@ -67,8 +81,9 @@ ggplot(rf_knn_df) +
   labs(x = "Index", y = "total_intl_calls", title = "kNN vs Rainforest for total_intl_calls")
 ```
 
-For `total_intl_calls`, as the value of x increases, the kNN values are spread across a thin range between 3 & 7 on the y-axis.
-When using RandomForest for imputation, the proximity of the values is high within a range of 0 - 8 on the y-axis. As the value of y increases, the values are more widespread and dispersed. For the most part using kNN for imputation results in the same distribution of values as when using RandomForest however, values obtained using kNN less uniform and more sporadic within the range 3 & 7 on the y-axis.
+When using kNN for imputation, as the value of x increases, the kNN values are spread across 2.1 and 6.5 on the y-axis. Majority of the points lie in between 5 and 3.5 on the y-axis. It can be observed that as the values on the y-axis increases, the values are more widespread and dispersed for values imputed using kNN.
+
+While in the case of using RandomForest for imputation, the proximity of the values is high. Majority of the points lie within a range of 4 and 5 on the y-axis. The values imputed by RandomForest vary very little having a more uniform dispersion along the x-axis compared to kNN.
 
 ```{r}
 ggplot(rf_knn_df) +
@@ -83,12 +98,9 @@ ggplot(rf_knn_df) +
   labs(x = "Index", y = "total_eve_minutes", title = "kNN vs Rainforest for total_eve_minutes")
 ```
 
-As `total_eve_minutes` on the y-axis increases, the RandomForest values are distributed across a broad ranging between 100 & 1300 on the y-axis.
+As `total_eve_minutes` on the y-axis increases, the values imputed by RandomForest are distributed across a broad ranging between 250 & 470 on the y-axis. Moving along the x-axis values imputed by RandomForest range quite a bit on the y-axis.
 
-Whereas for kNN, the values lie within a considerably narrow band of 100 - 350 on the y-axis. The increase in the value of y, has no effect of the values of this attribute. A similar pattern is observed when using RandomForest for imputation.
-
-The assumption is that the areas in the plot for `total_eve_minutes` and `total_intl_calls` where kNN differs from RandomForest is where the values where imputed and where they differ.
-
+Whereas for kNN, the values lie within a range of 100 - 350 on the y-axis. As you move along the x-axis you can observer that the variation of points change very little on the y-axis unlike values imputed by RandomForest.
 
 ## 2. Stepwise Regression
 

@@ -37,7 +37,7 @@ state_freq
 ```
 
 ```{r fig.width = 8, fig.height = 7}
-ggplot(state_freq, aes(state,freq, fill = state)) +
+ggplot(state_freq, aes(x = reorder(state, freq), y = freq, fill = state)) +
   geom_bar(stat = 'identity') +
   coord_flip() +
   theme_minimal() +

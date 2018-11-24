@@ -9,9 +9,15 @@ library("ROCR")
 library("pROC")
 ```
 
+Loading libraries Magrittr which structuring sequences of data operations left-to-right,avoiding nested function calls and making it easy to add steps anywhere in the sequence of operations. The ROCR creates a visuialization of ROC graphs, sensitivity/specificity curves, lift charts,
+and precision/recall plots are popular examples of trade-off
+visualizations for specific pairs of performance measures. Finally pROC is described as a Tool for visualizing, smoothing and comparing receiver operating characteristic (ROC curves).
+
 ```{r echo = F}
 load("./data/data_prep.rda")
 ```
+Loading data.
+
 
 ```{r echo = F}
 # A function to split data into training (70%) and validation (30%)
@@ -31,6 +37,9 @@ create_data_partition <- function(dataset, train_size = 0.70) {
   )
 }
 ```
+The Create_data_partition creates a function that splits the data into training 70% and having the reminder of 30%, this is then followed by dividing the data values into train and test. 
+The "retutn" function will then creates a randomly formula to indentifies the rows equal to the sample size from all of the dataset and then stores these findings (row number) into "train_ind"
+
 
 ```{r}
 set.seed(123)
@@ -58,6 +67,7 @@ modelRF <- glm(
 
 summary(modelRF)
 ```
+
 
 ```{r}
 set.seed(123)
@@ -151,6 +161,8 @@ ks1.tree <- max(attr(perf_val2, "y.values")[[1]] - (attr(perf_val2, "x.values")[
 ks1.tree
 ```
 
+
+
 ```{r}
 #Stepwise Logistic Regression
 mylogit_df1 = step(modelKNN)
@@ -212,6 +224,7 @@ ks1.tree1
 
 
 
+
 ```{r}
 pred_churn_rf <- predict(modelRF, newdata = test_df_rf, type = "response")
 roc_out_rf <- roc(test_df_rf$churn, pred_churn_rf)
@@ -222,6 +235,8 @@ roc_out_rf
 ```{r}
 plot(roc_out_rf, col = "red", lwd = 3)
 ```
+The Roc Curve is a eleuation method we used to assess the efficacy of binary characteristic algorithm as well as choose the optimal threshold based on our tolerance for false negatives and desire for true positives. Here we have a curve that shows a good result based on its useless, as displayed on the graph the x axis shows the specificity and the y axis shows the sensitivity. The area under the curve is used as a singular measure for assessing the usefulness of a classifier. For a perfect classifier the area under the ROC curve would be 1: 
+
 
 ```{r}
 pred_churn_knn <- predict(modelKNN, newdata = test_df_knn, type = "response")

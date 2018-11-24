@@ -56,9 +56,7 @@ rf_knn_df <- data.frame(
 rf_knn_df
 ```
 
-ggplot is a data visualization package useful for creating complex but elegant plots. The below plots show a visual for the variables total_intl_calls and total_eve_minutes with the imputed values through both the kNN and RandomForest methods.
-For total_intl_calls, as the value of x increases, the kNN values are spread across a thin range between 3 & 7 on the y-axis,
-For RandomForest, the proximity of the values is high within a range of 0 - 8 on the y-axis. As the value of y increases, the values are more widespread and dispersed.
+The below plots show a visual representation of the variables `total_intl_calls` and `total_eve_minutes` with the imputed values through both the kNN and RandomForest methods.
 
 ```{r}
 ggplot(rf_knn_df) +
@@ -73,6 +71,9 @@ ggplot(rf_knn_df) +
   labs(x = "Index", y = "total_intl_calls", title = "kNN vs Rainforest for total_intl_calls")
 ```
 
+For `total_intl_calls`, as the value of x increases, the kNN values are spread across a thin range between 3 & 7 on the y-axis.
+When using RandomForest for imputation, the proximity of the values is high within a range of 0 - 8 on the y-axis. As the value of y increases, the values are more widespread and dispersed. For the most part using kNN for imputation results in the same distribution of values as when using RandomForest however, values obtained using kNN less uniform and more sporadic within the range 3 & 7 on the y-axis.
+
 ```{r}
 ggplot(rf_knn_df) +
   geom_point(aes(
@@ -86,8 +87,11 @@ ggplot(rf_knn_df) +
   labs(x = "Index", y = "total_eve_minutes", title = "kNN vs Rainforest for total_eve_minutes")
 ```
 
-For total_eve_minutes, as the value of the attribute (y) increases, the RandomForest values are distributed across a broad ranging between 100 & 1300 on the y-axis,
-whereas for kNN, the values lie within a considerably narrow band of 100 - 350 on the y-axis. The increase in the value of y, has no effect of the values of this attribute.
+As `total_eve_minutes` on the y-axis increases, the RandomForest values are distributed across a broad ranging between 100 & 1300 on the y-axis.
+
+Whereas for kNN, the values lie within a considerably narrow band of 100 - 350 on the y-axis. The increase in the value of y, has no effect of the values of this attribute. A similar pattern is observed when using RandomForest for imputation.
+
+The assumption is that the areas in the plot for `total_eve_minutes` and `total_intl_calls` where kNN differs from RandomForest is where the values where imputed and where they differ.
 
 
 ## 2. Stepwise Regression

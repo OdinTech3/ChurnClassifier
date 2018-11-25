@@ -1,14 +1,130 @@
 ---
 title: "Data_prediction"
-output: html_document
+output: html_notebook
 ---
-```{r}
+
+```{r warning = F}
+library("dplyr")
+library("magrittr")
+library("ggplot2")
+library("fiftystater")
+```
+
+```{r echo = F}
 load("./data/model_building.rda")
 load("./data/customers_to_predict.Rdata")
 ```
 
+# 1. Making The Prediction 
 ```{r}
-pred_churn <- predict(modelRF, newdata = Customers_To_Predict, type = "response")
+Churn_Prob <- predict(modelRF, newdata = Customers_To_Predict, type = "response")
 
-hist(pred_churn, 100)
+hist(Churn_Prob, 100)
 ```
+
+`Churn_Prob` contains all the probalities (from 0 to 1) that a customer from a pool of 1000 customers will churn or not. The histogram above reveals the distribution of the probabilities of churn across the 1000 customers we predicted. The histogram tells us that most customers stayed meaning that they did not churn since the frequency of a customer not churning was higher between the probabilites of 0.0 to 0.5 with the larger subset between 0.0 to 0.2 (our group concluded that 0.5 was threshold for a customer churning or not). Previous research [^1] done on churn rate for wireless carriers suggested that the ideal churn rate was between 1.9 to 2.0. 
+
+Another researcher further indicates that a good churn rate is between 5% to 7% annual or 0.42% - 0.58% monthly. This means that companies with acceptable churn only loose 1 out of every 200 customers per month [^2].
+
+```{r}
+churn <- rep("no", nrow(Customers_To_Predict))
+churn[Churn_Prob > 0.2] = "yes"
+
+Customers_To_Predict$churn <- churn
+```
+
+```{r}
+calc.churn_rate <- function(churn) {
+  count_churn <- function(value) {
+    return (churn %>%
+              subset(churn == value) %>%
+              length())
+  }
+  
+  num_yes <- count_churn("yes")
+  
+  return(num_yes/length(churn) * 100)
+}
+
+state_churn_rate <- Customers_To_Predict %>%
+  select(state, churn) %>%
+  group_by(state) %>%
+  summarise(churn_rate = calc.churn_rate(churn))
+
+state_churn_rate
+```
+
+```{r fig.width = 8, fig.height = 7}
+ggplot(state_churn_rate, aes(x = reorder(state, churn_rate),  y = churn_rate, fill = state)) +
+  geom_bar(stat = 'identity') +
+  coord_flip() +
+  theme_minimal() +
+  guides(fill = F) +
+  labs(x = "States", y = "Churn Rate", title = "Churn Rate of Customers per US State")
+```
+```{r echo = F}
+# us_map_data has all the data needed to plot the fifty states on a map
+us_map_data <- merge(
+  fifty_states,
+  data.frame(
+    # Add missing state DC
+    state = c(state.abb, "DC"),
+    id = tolower(c(state.name, "district of columbia"))
+  ),
+  by = "id",
+  all = T
+)
+```
+
+```{r echo = F}
+# We will merge the the state_churn_rate of the state in state_churn_rate to the us_map_data
+state_churn_rate <- merge(state_churn_rate, us_map_data, by = "state") %>%
+  select(id, churn_rate, long, lat, group) %>%
+  distinct()
+```
+
+```{r echo = F}
+# Using the state.center list we can find out the exact center of each state
+state_ctrs <- data.frame(
+    state = c(state.abb, "DC"),
+    c_long = c(state.center$x, 38.889931) ,
+    c_lat = c(state.center$y, -77.009003)
+  ) %>%
+  merge(us_map_data, ., by = "state") %>%
+  select(state, id, c_long, c_lat) %>%
+  distinct()
+```
+
+```{r}
+ggplot(us_map_data, aes(x = long, y = lat)) +
+  geom_map(
+    map = us_map_data,
+    color="#ffffff",
+    aes(map_id = id)
+  ) +
+  geom_map(
+    data = state_churn_rate,
+    map = us_map_data,
+     color="#ffffff",
+    aes(fill = churn_rate, map_id = id)
+  ) +
+  scale_fill_continuous(low = 'thistle2', high = 'darkred', guide='colorbar') +
+  geom_text(
+    data = state_ctrs,
+    size = 2,
+    aes(x = c_long, y = c_lat, label = state)
+  ) +
+  coord_cartesian(xlim = c(-130, -65), ylim = c(24, 51)) +
+  theme(
+    axis.ticks = element_blank(),
+    axis.text = element_blank(),
+    panel.background = element_blank(),
+    panel.border = element_blank()
+  ) +
+  labs(x = NULL, y = NULL, title = "Churn Rate of Customers per US State")
+```
+
+# References
+
+[^1]: FierceWireless. (n.d.). Average monthly churn rate for wireless carriers in the United States from 1st quarter 2013 to 1st quarter 2018. In Statista - The Statistics Portal. Retrieved November 25, 2018, from https://www.statista.com/statistics/283511/average-monthly-churn-rate-top-wireless-carriers-us/.
+[^2]: https://www.facebook.com/LincolnMurphyShares. (2015, July 30). SaaS Churn Rate - What’s Acceptable? Retrieved November 25, 2018, from https://sixteenventures.com/saas-churn-rate

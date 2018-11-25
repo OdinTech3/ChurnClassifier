@@ -52,7 +52,7 @@ test_df_rf <- cdf_rf.imputed[-rf_train_index,]
 # 2. Building The Models
 
 In this stage of the we focus on the model building aspect of our report. The building of the model is used to to generate predictions, these predictions includes the international_planyes, voice_mail_planyes, etc. To find out which model is better we will compare the coefficients for both models (ModelRF and ModelKNN) listed below.
-When comparing against the Churn the ModelRf and ModelKNN shows similiar findings, it shows the international_planyes has a positive correlation in both models the only sections that shows a negative attributes for both ModelRf and ModelKNN are voice_mail_planyes, total_eve_minutes and total_intl_calls  which means the more these sections increases the more churn decreases which is good because we are trying to keep churn as small as possible in comparison to the others (international_planyes,total_day_charge,total_day_calls,total_eve_charge,total_night_minutes,total_intl_charge,number_customer_service_calls) which shows that an increase in these section would also cause an increase in in churn)
+When comparing against the Churn, as the dependent variable, the ModelRf and ModelKNN demostrates similiar findings. It shows the international_planyes has a positive correlation in both models, The only parameters that show a negative attributes for both ModelRf and ModelKNN are voice_mail_planyes, total_eve_minutes and total_intl_calls A possib;e exlanation for this developement is that the more these variables increase, the more churn decreases. However, totl_eve_minutes is a poor predictor of churn. It is beneficial because we are trying to keep churn as small as possible in comparison to the others variables (i.e., international_planyes,total_day_charge,total_day_calls,total_eve_charge,total_night_minutes,total_intl_charge,number_customer_service_calls)s . These  variable illustrate that an increase in these section would also cause an increase in in churn.
 ```{r}
 modelRF <- glm(
   churn~international_plan +
@@ -95,8 +95,8 @@ summary(modelKNN)
 
 # 3. Predicting & Evaluating Accuracy
 
-In comparing the the prediction and evcuracy our create two models "ModelRF" and "ModelKNN" which is listed below. However, before we move on we need to establish the meaning of the AUC. The AUC is the area under the curve which is calculated into a single varible to determine the better accuracy results. 
-Listed below you will find that the "ModelRF" has a 82% accuracy rate in compare to the "ModelKNN" that has a 80% accuracy rate which means that the "ModelRF" would be the ideal choice between both models.
+In comparing the the prediction and accuracy of our two models "ModelRF" and "ModelKNN", which are listed below. However, before we move on to this analysis, we need to establish the meaning of the AUC. The AUC is the area under the curve, measure of accuracy fit of our model, which is calculated into a single varible to determine the better accuracy results. 
+Listed below you will find that the "ModelRF" has a 82% accuracy rate in compare to the "ModelKNN" that has a 80% accuracy rate which means that the "ModelRF" would be the ideal choice between both models. One can argue that both models delivers acceptable AUC metrics.
 
 ## 3.1 Evaluating The Accuracy of `modelRF`
 The "ModelRF" has a AUC of 82% of accuracy.
@@ -113,7 +113,8 @@ roc_out_rf
 plot(roc_out_rf, col = "red", xlab = "False Positive", ylab = "True Positive")
 ```
 
-The ROC curve is an evaluation method we used to assess the efficacy of binary characteristic algorithm as well as choose the optimal threshold based on our tolerance for false negatives and desire for true positives. Here we have a curve that shows a good result based on its useless, as displayed on the graph the x axis shows the specificity and the y axis shows the sensitivity. The area under the curve is used as a singular measure for assessing the usefulness of a classifier. For a perfect classifier the area under the ROC curve would be 1:
+The ROC curve is an evaluation method we used to assess the efficacy of binary characteristic algorithm as well as choose the optimal threshold based on our tolerance for false negatives and desire for true positives. Here we have a curve that shows a reltively good result based on its usefulness as predictor. As displayed on the graph, the x axis shows the False Positive and the y axis shows the True Positive. The area under the curve is used as a singular measure for assessing the usefulness of a classifier. For a perfect classifier the area under the ROC curve would be 1.
+Therefore, the higher the AUC we have greater confidence in the predictive nature of our model.
 
 
 ## 3.2 Evaluating The Accuracy of `modelKNN`
@@ -130,8 +131,8 @@ plot(roc_out_knn, col = "red", xlab = "False Positives", ylab = "True Positives"
 
 # 4. Evaluating The Winining Model
 
-Judging from our prediction churn status findings and our actual churn status findings we found out our misclassification rate 
-(186+81)/1547 errors - a 1.73% misclassification rate.
+Judging from our prediction churn status findings and our actual churn status findings, we found out our misclassification rate to be: 
+(186+81)/1547 errors - 1.73% misclassification rate, relatively low rate.
 
 ```{r}
 predicted_churn_status <- as.factor(pred_churn_rf > 0.2)

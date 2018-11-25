@@ -47,7 +47,7 @@ train_df_rf <- cdf_rf.imputed[rf_train_index,]
 test_df_rf <- cdf_rf.imputed[-rf_train_index,]
 ```
 
-# 2. Building The Model
+# 2. Building The Models
 ```{r}
 modelRF <- glm(
   churn~international_plan +
@@ -89,7 +89,7 @@ summary(modelKNN)
 
 # 3. Predicting & Evaluating Accuracy
 
-## 3.1 Evaluation Accuracy of `modelRF`
+## 3.1 Evaluating The Accuracy of `modelRF`
 
 ```{r}
 pred_churn_rf <- predict(modelRF, newdata = test_df_rf, type = "response")
@@ -99,13 +99,13 @@ roc_out_rf
 ```
 
 ```{r}
-plot(roc_out_rf, col = "red", xlab = "False positive", ylab = "True positive")
+plot(roc_out_rf, col = "red", xlab = "False Positive", ylab = "True Positive")
 ```
 
 The ROC curve is an evaluation method we used to assess the efficacy of binary characteristic algorithm as well as choose the optimal threshold based on our tolerance for false negatives and desire for true positives. Here we have a curve that shows a good result based on its useless, as displayed on the graph the x axis shows the specificity and the y axis shows the sensitivity. The area under the curve is used as a singular measure for assessing the usefulness of a classifier. For a perfect classifier the area under the ROC curve would be 1:
 
 
-## 3.2 Evaluation accuracy of `modelKNN`
+## 3.2 Evaluating The Accuracy of `modelKNN`
 ```{r}
 pred_churn_knn <- predict(modelKNN, newdata = test_df_knn, type = "response")
 roc_out_knn <- roc(test_df_knn$churn, pred_churn_knn)
@@ -116,7 +116,7 @@ roc_out_knn
 plot(roc_out_knn, col = "red", xlab = "False Positives", ylab = "True Positives")
 ```
 
-# 4. Evaluation The Winining Model
+# 4. Evaluating The Winining Model
 
 ```{r}
 predicted_churn_status <- as.factor(pred_churn_rf > 0.2)

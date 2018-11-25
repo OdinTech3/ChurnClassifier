@@ -131,9 +131,6 @@ plot(roc_out_knn, col = "red", xlab = "False Positives", ylab = "True Positives"
 
 # 4. Evaluating The Winining Model
 
-Judging from our prediction churn status findings and our actual churn status findings, we found out our misclassification rate to be: 
-(186+81)/1547 errors - 1.73% misclassification rate, relatively low rate.
-
 ```{r}
 predicted_churn_status <- as.factor(pred_churn_rf > 0.2)
 levels(predicted_churn_status)  <- list(no = "FALSE", yes = "TRUE")
@@ -141,6 +138,10 @@ confusion_matrix <- table(predicted_churn_status, actual_churn_status = test_df_
 
 confusion_matrix
 ```
+
+The group reached a consesus on the threshold to use for our model. __0.2__ Provided the best confusion matrix, looking at our prediction churn status findings and our actual churn status findings, we found out our misclassification rate to be:
+
+__(186 + 81)/1547 errors - 1.73% misclassification rate, a relatively low rate.__
 
 ```{r}
 save(modelKNN, modelRF, file = "data/model_building.rda")

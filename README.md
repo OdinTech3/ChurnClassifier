@@ -1,6 +1,6 @@
 # ChurnClassifier
 
-Churn (loss of customers to competition) is a problem for telecom companies because it is more expensive to acquire a new customer than to keep your existing one from leaving. This project is about enabling churn reduction using analytics.
+Churn (loss of customers to competition) is a problem for telecom companies because it is more expensive to acquire a new customer than to keep your existing one from leaving. This project is about conducting churn reduction using analytics.
 
 
 ## Project Inspiration
